@@ -13,3 +13,10 @@ library(lubridate)
 library(forecast)
 library(stargazer)
 #---------------DESARROLLO DEL CÓDIGO PARA LA INVESTIGACIÓN----------------
+dim(mtcars)
+names(mtcars)
+hist(mtcars$mpg,
+     col='steelblue',
+     main='Histogram',
+     xlab='mpg',
+     ylab='Frequency')
