@@ -20,3 +20,4 @@ hist(mtcars$mpg,
      main='Histogram',
      xlab='mpg',
      ylab='Frequency')
+mtcars %>% arrange(desc(cyl), desc(disp))
