@@ -33,7 +33,7 @@ View(periodo2022)
 ?  ? stringr
 
 summary(str_length(periodo2022$ID))
-str_to_title(periodo2022$`Razon Social`)
+
 
 length(unique(periodo2022$ID)) # No existen valores duplicados
 length(unique(periodo2022$RUT)) # No existen valores duplicados
@@ -108,13 +108,54 @@ format_iso8601(periodo2022$`Fecha de aprobacion x SII`)
 format_ISO8601(periodo2022$`Fecha de registro (ultima firma)`)
 print(periodo2022)
 View(periodo2022)
+
 # STRINGR
 
 digito_verificador <- str_extract(periodo2022$RUT,"\\d$")
 print(digito_verificador)
 
+duplicados <- duplicated(periodo2022$ID)
+ID_duplicado <- which(duplicados)
+print(ID_duplicado)
+
+str_to_title(periodo2022$`Razon Social`)
+print(periodo2022)
+View(periodo2022)
+
+# STARGAZER
+rm(capital)
+
+
+
+print(capital)
+view(capital)
+
+
+stargazer(capital, 
+          summary = TRUE, 
+          summary.stat = c("mean", "median"),
+          title = "Resumen estadístico del dataset",
+          out= "data.txt")
 
 # GGPLOT2
+rm(capital_densidad)
+rm(valores_ord)
+rm(data)
 
 
+capital <- subset(periodo2022, select = Capital)  
+
+ggplot(capital, aes(x = "", y = Capital)) +
+  geom_boxplot() +
+  labs(x = "", y = "Valores") +
+  ggtitle("Diagrama de Caja y Bigote")
+
+
+ggplot(capital, aes(x = Capital)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(x = "Valores", y = "Densidad") +
+  ggtitle("Gráfico de Densidad")
+
+
+ 
 
