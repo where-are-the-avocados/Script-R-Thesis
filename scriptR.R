@@ -70,7 +70,7 @@ ggplot(data = Hites, aes(y = `Activo total...2`, x = Cuentas)) +
       vjust = -1
     )
   ) +
-  xlab("Periodos") + ylab("Monto del Activo Total") +
+  xlab("Fecha de corte") + ylab("Monto") +
   scale_y_continuous(
     breaks = seq(0, 500000000, 50000000),
     labels = function(x)
