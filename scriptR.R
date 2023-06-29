@@ -1,161 +1,83 @@
 # ---------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN------------------
 # install.packages("tidyverse",
-#                 "styler",
 #                 "stargazer",
 #                 "lubridate",
-#                 "styler",
 #                 "forecast",
-#                 "lintr")
+#                 "readxl")
+
 #----------------REVISIÓN DE SESIÓN DE RSTUDIO-----------------------------
 sessionInfo()
 options(scipen = 99999)
+update.packages()
+
 #----------------CARGAR LIBRERIAS DE PAQUETES DE INVESTIGACIÓN-------------
 library(tidyverse)
-library(styler)
 library(stargazer)
 library(lubridate)
 library(forecast)
-
+library(readxl)
 
 #---------------DESARROLLO DEL CÓDIGO PARA LA INVESTIGACIÓN----------------
 # Importación de la Base de Datos
-library(readr)
-periodo2022 <-
-  read_delim(
-    "DataBase/2022-sociedades-por-fecha-rut-constitucion.csv",
-    delim = ";",
-    escape_double = FALSE,
-    trim_ws = TRUE
-  )
-View(periodo2022)
+library(readxl)
+Hites <- read_excel("economatica.xlsx",
+                    sheet = "Hoja1")
+View(Hites)
 
-?  ? forecast
-?  ? stringr
+# Funciones que permiten identificar la estructura del Dataset
+head(Hites)
+tail(Hites)
+structure(Hites)
+glimpse(Hites)
+str(Hites)
+dim(Hites)
+nrow(Hites)
+ncol(Hites)
+ls(Hites)
+names(Hites)
+summary(Hites)
 
-summary(str_length(periodo2022$ID))
+# Limpieza del Dataset
 
+as.Date(Hites$Cuentas)
+glimpse(Hites)
 
-length(unique(periodo2022$ID)) # No existen valores duplicados
-length(unique(periodo2022$RUT)) # No existen valores duplicados
+# Análisis de Datos
 
-# Valores más repetidos
-tail(names(sort(table(
-  periodo2022$`Comuna Tributaria`
-))), 1)
-tail(names(sort(table(
-  periodo2022$`Region Tributaria`
-))), 1)
-tail(names(sort(table(
-  periodo2022$`Codigo de sociedad`
-))), 1)
+# Tendencia Central
+mean(Hites$`Activo total...2`)
+median(Hites$`Activo total...2`)
 
-# REVISAR A MAYOR PROFUNDIDAD
-min(periodo2022$Capital)
-max(periodo2022$Capital)
-summary(periodo2022$Capital)
-tail(names(sort(table(
-  periodo2022$Capital
-))), 1) # Un millon es el valor mas repetido
+# Medidas de Variabilidad
+range(Hites$`Activo total...2`)
+var(Hites$`Activo total...2`)
+sd(Hites$`Activo total...2`)
 
-length(unique(periodo2022$Capital)) # Existen valores repetidos en el capital, solamente 1701 son unicos
-
-# Es la misma funcion pero una es con Z y la otra con S ??????
-summarize(periodo2022)
-summarise(periodo2022)
-
-distinct(periodo2022$RUT)
-
-is.na(periodo2022$Capital)
-
-View(periodo2022)
-
-periodo2022 <-
-  periodo2022 %>% rename(Año = Anio) # Corrige el error en el nombre
-View(periodo2022)
-
-# FUNCIONES EXTRA
-
-cantidad_na <- sum(is.na(periodo2022))
-print(cantidad_na)
-
-fila_na <- which(apply(is.na(periodo2022), 1, any))
-print(fila_na)
-
-valor_na <- periodo2022[which(rowSums(is.na(periodo2022)) > 0), ]
-View(valor_na)
-
-# FORECAST
-
-# AIRPASSENGERS
-# LYNX
-# ELECTRICITY
-# NILE
-
-# LUBRIDATE
-periodo2022$`Fecha de actuacion (1era firma)` <-
-  ymd(periodo2022$`Fecha de actuacion (1era firma)`)
-
-periodo2022$`Fecha de aprobacion x SII` <-
-  ymd(periodo2022$`Fecha de aprobacion x SII`)
-
-periodo2022$`Fecha de registro (ultima firma)` <-
-  ymd(periodo2022$`Fecha de registro (ultima firma)`)
-
-periodo2022 <- periodo2022[order(periodo2022$`Fecha de actuacion (1era firma)`), ]
-
-format_ISO8601(periodo2022$`Fecha de actuacion (1era firma)`)
-format_iso8601(periodo2022$`Fecha de aprobacion x SII`)
-format_ISO8601(periodo2022$`Fecha de registro (ultima firma)`)
-print(periodo2022)
-View(periodo2022)
-
-# STRINGR
-
-digito_verificador <- str_extract(periodo2022$RUT,"\\d$")
-print(digito_verificador)
-
-duplicados <- duplicated(periodo2022$ID)
-ID_duplicado <- which(duplicados)
-print(ID_duplicado)
-
-str_to_title(periodo2022$`Razon Social`)
-print(periodo2022)
-View(periodo2022)
-
-# STARGAZER
-rm(capital)
-
-
-
-print(capital)
-view(capital)
-
-
-stargazer(capital, 
-          summary = TRUE, 
-          summary.stat = c("mean", "median"),
-          title = "Resumen estadístico del dataset",
-          out= "data.txt")
-
-# GGPLOT2
-rm(capital_densidad)
-rm(valores_ord)
-rm(data)
-
-
-capital <- subset(periodo2022, select = Capital)  
-
-ggplot(capital, aes(x = "", y = Capital)) +
-  geom_boxplot() +
-  labs(x = "", y = "Valores") +
-  ggtitle("Diagrama de Caja y Bigote")
-
-
-ggplot(capital, aes(x = Capital)) +
-  geom_density(fill = "blue", alpha = 0.5) +
-  labs(x = "Valores", y = "Densidad") +
-  ggtitle("Gráfico de Densidad")
-
-
- 
-
+ggplot(data = Hites, aes(y = `Activo total...2`, x = Cuentas)) +
+  geom_line(col = "#00f8ff", size = 0.5) + geom_point(col = "#00bfc4", size = 2) +
+  ggtitle("Evolución del Activo Total de Hites S.A.",
+          subtitle = "Corresponde a las variaciones en el monto para los intervalos entre el año 2009 y el 2023") +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      vjust = 1,
+      hjust = 1
+    ),
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    plot.subtitle = element_text(
+      size = 8,
+      face = "italic",
+      vjust = -1
+    )
+  ) +
+  xlab("Periodos") + ylab("Monto del Activo Total") +
+  scale_y_continuous(
+    breaks = seq(0, 500000000, 50000000),
+    labels = function(x)
+      format(
+        x,
+        big.mark = ".",
+        decimal.mark = ",",
+        scientific = FALSE
+      )
+  ) + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "1 year")
