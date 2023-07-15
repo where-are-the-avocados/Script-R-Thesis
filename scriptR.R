@@ -58,15 +58,18 @@ sd(Hites_EEFF$`Activo total`)
 Hites_EEFF$Fechas = as.Date(Hites_EEFF$Fechas, format = "%Y/%m/%d")
 
 seq(as.Date("2010-03-31"), as.Date("2023-03-31"), by = "quarter")
-#------------------------------ANALISIS DE DATOS--------------------------------
+
 #--------------------------RATIOS FINANCIEROS-----------------------------------
-
-Liquidez <- Hites_EEFF %>% select(Fechas,
+Ratios <- Hites_EEFF %>% select(Fechas,
                                   `Activo Corriente`,
-                                  `Pasivo Corriente`) %>%
-  mutate(Liquidez = `Activo Corriente` / `Pasivo Corriente`)
+                                  `Pasivo Corriente`,
+                                  `Inventarios corrientes`) %>%
+  mutate(
+    Liquidez = `Activo Corriente` / `Pasivo Corriente`,
+    Prueba_acida = (`Activo Corriente` - `Inventarios corrientes`) / `Pasivo Corriente`
+  )
 
-ggplot(data = Liquidez, aes(x = Fechas, y = Liquidez)) +
+ggplot(data = Ratios, aes(x = Fechas, y = Liquidez)) +
   geom_line(col = "#77dd66", size = 0.5) + geom_point(col = "#4d9042", size = 2) +
   ggtitle("Evolución del ratio de liquidez de Hites S.A.",
           subtitle = "Corresponde a las variaciones en el ratio para los intervalos entre el año 2010 y el 2023") +
@@ -96,7 +99,7 @@ ggplot(data = Liquidez, aes(x = Fechas, y = Liquidez)) +
   ) + scale_x_date(date_labels = "%Y-%m-%d", date_breaks = "1 year")
 
 # Guardamos un pronóstico del ratio de liquidez
-frcst_liquidez <- Liquidez %>% select(Liquidez)
+frcst_liquidez <- Ratios %>% select(Liquidez)
 
 # Generamos un gráfico para el pronóstico
 autoplot(forecast(ts(
@@ -110,7 +113,55 @@ main = "Pronóstico para el ratio de liquidez de Hites S.A.") +
   scale_y_continuous(breaks = round(seq(
     min(frcst_liquidez$Liquidez),
     max(frcst_liquidez$Liquidez),
-    by = 0.5
+    by = 0.4
+  ), 1))
+
+# Evolución de la prueba ácida
+ggplot(data = Ratios, aes(x = Fechas, y = Prueba_acida)) +
+  geom_line(col = "#ff859a", size = 0.5) + geom_point(col = "#b25d6b", size = 2) +
+  ggtitle("Evolución de la razón ácida de Hites S.A.",
+          subtitle = "Corresponde a las variaciones en el ratio para los intervalos entre el año 2010 y el 2023") +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      vjust = 1,
+      hjust = 1
+    ),
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    plot.subtitle = element_text(
+      size = 8,
+      face = "italic",
+      vjust = -1
+    )
+  ) +
+  xlab("Fecha de corte") + ylab("Ratio") +
+  scale_y_continuous(
+    breaks = seq(0, 500000000, 50000000),
+    labels = function(x)
+      format(
+        x,
+        big.mark = ".",
+        decimal.mark = ",",
+        scientific = FALSE
+      )
+  ) + scale_x_date(date_labels = "%Y-%m-%d", date_breaks = "1 year")
+
+# Guardamos un pronóstico de la prueba ácida
+frcst_acida <- Ratios %>% select(Prueba_acida)
+
+# Generamos un gráfico para el pronóstico
+autoplot(forecast(ts(
+  frcst_acida,
+  start = c(2010, 1),
+  frequency = 4
+)),
+xlab = "Fecha de corte",
+ylab = "Ratio",
+main = "Pronóstico para la prueba acida de Hites S.A.") +
+  scale_y_continuous(breaks = round(seq(
+    min(frcst_acida$Prueba_acida),
+    max(frcst_acida$Prueba_acida),
+    by = 0.4
   ), 1))
 
 #------------------ANALISIS DEL DATASET DE ACTIVOS DE HITES S.A.----------------
