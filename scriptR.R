@@ -23,6 +23,7 @@ library(readxl)
 library(readxl)
 Hites_EEFF <- read_excel("Hites_EEFF.xlsx",
                          sheet = "activo1")
+print(Hites_EEFF)
 View(Hites_EEFF)
 
 ls() # Revisa que todo esté cargado
@@ -55,19 +56,20 @@ sd(Hites_EEFF$`Activo total`)
 
 #------------------------------LIMPIEZA DEL DATASET-----------------------------
 # Ajustamos la fecha del dataset al formato de la ISO 8601
-Hites_EEFF$Fechas = as.Date(Hites_EEFF$Fechas, format = "%Y/%m/%d")
-
-seq(as.Date("2010-03-31"), as.Date("2023-03-31"), by = "quarter")
+#Hites_EEFF$Fechas = as.Date(Hites_EEFF$Fechas, format = "%Y/%m/%d")
 
 #--------------------------RATIOS FINANCIEROS-----------------------------------
 Ratios <- Hites_EEFF %>% select(Fechas,
-                                  `Activo Corriente`,
-                                  `Pasivo Corriente`,
-                                  `Inventarios corrientes`) %>%
+                                `Activo Corriente`,
+                                `Pasivo Corriente`,
+                                `Inventarios corrientes`) %>%
   mutate(
     Liquidez = `Activo Corriente` / `Pasivo Corriente`,
-    Prueba_acida = (`Activo Corriente` - `Inventarios corrientes`) / `Pasivo Corriente`
+    Prueba_acida = (`Activo Corriente` - `Inventarios corrientes`) / `Pasivo Corriente`,
+    Capital_neto = `Activo Corriente` - `Pasivo Corriente`
   )
+
+# Graficos de los Ratios Financieros
 
 ggplot(data = Ratios, aes(x = Fechas, y = Liquidez)) +
   geom_line(col = "#77dd66", size = 0.5) + geom_point(col = "#4d9042", size = 2) +
@@ -88,7 +90,6 @@ ggplot(data = Ratios, aes(x = Fechas, y = Liquidez)) +
   ) +
   xlab("Fecha de corte") + ylab("Ratio") +
   scale_y_continuous(
-    breaks = seq(0, 500000000, 50000000),
     labels = function(x)
       format(
         x,
@@ -96,25 +97,7 @@ ggplot(data = Ratios, aes(x = Fechas, y = Liquidez)) +
         decimal.mark = ",",
         scientific = FALSE
       )
-  ) + scale_x_date(date_labels = "%Y-%m-%d", date_breaks = "1 year")
-
-# Guardamos un pronóstico del ratio de liquidez
-frcst_liquidez <- Ratios %>% select(Liquidez)
-
-# Generamos un gráfico para el pronóstico
-autoplot(forecast(ts(
-  frcst_liquidez,
-  start = c(2010, 1),
-  frequency = 4
-)),
-xlab = "Fecha de corte",
-ylab = "Ratio",
-main = "Pronóstico para el ratio de liquidez de Hites S.A.") +
-  scale_y_continuous(breaks = round(seq(
-    min(frcst_liquidez$Liquidez),
-    max(frcst_liquidez$Liquidez),
-    by = 0.4
-  ), 1))
+  ) + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "1 year")
 
 # Evolución de la prueba ácida
 ggplot(data = Ratios, aes(x = Fechas, y = Prueba_acida)) +
@@ -136,7 +119,6 @@ ggplot(data = Ratios, aes(x = Fechas, y = Prueba_acida)) +
   ) +
   xlab("Fecha de corte") + ylab("Ratio") +
   scale_y_continuous(
-    breaks = seq(0, 500000000, 50000000),
     labels = function(x)
       format(
         x,
@@ -144,25 +126,36 @@ ggplot(data = Ratios, aes(x = Fechas, y = Prueba_acida)) +
         decimal.mark = ",",
         scientific = FALSE
       )
-  ) + scale_x_date(date_labels = "%Y-%m-%d", date_breaks = "1 year")
+  ) + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "1 year")
 
-# Guardamos un pronóstico de la prueba ácida
-frcst_acida <- Ratios %>% select(Prueba_acida)
-
-# Generamos un gráfico para el pronóstico
-autoplot(forecast(ts(
-  frcst_acida,
-  start = c(2010, 1),
-  frequency = 4
-)),
-xlab = "Fecha de corte",
-ylab = "Ratio",
-main = "Pronóstico para la prueba acida de Hites S.A.") +
-  scale_y_continuous(breaks = round(seq(
-    min(frcst_acida$Prueba_acida),
-    max(frcst_acida$Prueba_acida),
-    by = 0.4
-  ), 1))
+# Evolución del capital neto
+ggplot(data = Ratios, aes(x = Fechas, y = Capital_neto)) +
+  geom_line(col = "#93b4ce", size = 0.5) + geom_point(col = "#aed5f4", size = 2) +
+  ggtitle("Evolución del Capital Neto de Hites S.A.",
+          subtitle = "Corresponde a las variaciones en el ratio para los intervalos entre el año 2010 y el 2023") +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      vjust = 1,
+      hjust = 1
+    ),
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    plot.subtitle = element_text(
+      size = 8,
+      face = "italic",
+      vjust = -1
+    )
+  ) +
+  xlab("Fecha de corte") + ylab("Ratio") +
+  scale_y_continuous(
+    labels = function(x)
+      format(
+        x,
+        big.mark = ".",
+        decimal.mark = ",",
+        scientific = FALSE
+      )
+  ) + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "1 year")
 
 #------------------ANALISIS DEL DATASET DE ACTIVOS DE HITES S.A.----------------
 
@@ -194,34 +187,9 @@ ggplot(data = Hites_EEFF, aes(y = `Activo total`, x = Fechas)) +
         decimal.mark = ",",
         scientific = FALSE
       )
-  ) + scale_x_date(date_labels = "%Y-%m-%d", date_breaks = "1 year")
+  ) + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "1 year")
 
-# Guardamos la secuencia de tiempo, la frecuencia indica que es trimestral,
-# y que es 4 veces al año, empieza el primer trimestre del 2010 y termina el
-# primer trimestre del 2023
-
-Efectivo_fcst = ts(
-  Hites_EEFF$Efectivo,
-  start = c(2010, 1),
-  end = c(2023, 1),
-  frequency = 4
-)
-
-# Muestra de resultados
-print(Efectivo_fcst)
-
-# Generamos un pronóstico para la evolución de los activos totales
-autoplot(
-  forecast(Efectivo_fcst),
-  xlab = "Tiempo",
-  ylab = "Monto",
-  main = "Pronóstico para la cuenta Efectivo de Hites S.A."
-) + scale_y_continuous(
-  labels = function(x)
-    format(x, big.mark = ".", scientific = FALSE)
-)
-
-#-----------ANALISIS DEL DATASET DE PASIVOS DE HITES S.A.-----------------------
+#--------ANALISIS DEL DATASET DE PASIVOS y PATRIMONIO DE HITES S.A.-------------
 
 # Evolución del Pasivo Total de Hites S.A.
 ggplot(data = Hites_EEFF, aes(y = `Pasivo total`, x = Fechas)) +
@@ -253,66 +221,10 @@ ggplot(data = Hites_EEFF, aes(y = `Pasivo total`, x = Fechas)) +
       )
   ) + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "1 year")
 
-# Guardamos la secuencia de tiempo, la frecuencia indica que es trimestral,
-# y que es 4 veces al año, empieza el primer trimestre del 2010 y termina el
-# primer trimestre del 2023
-
-Proveedores_fcst = ts(
-  Hites_EEFF$`Provedores corrientes`,
-  start = c(2010, 1),
-  end = c(2023, 1),
-  frequency = 4
-)
-
-# Muestra de resultados
-print(Proveedores_fcst)
-
-# Generamos un pronóstico para la evolución de los activos totales
-autoplot(
-  forecast(Proveedores_fcst),
-  xlab = "Tiempo",
-  ylab = "Monto",
-  main = "Pronóstico para la cuenta Proveedores de Hites S.A."
-) + scale_y_continuous(
-  labels = function(x)
-    format(x, big.mark = ".", scientific = FALSE)
-)
-
-#-----------ANALISIS DEL DATASET DE PATRIMONIO DE HITES S.A.--------------------
-
 #-----------ANALISIS DEL DATASET DE ESTADO DE RESULTADOS DE HITES S.A.----------
 
-# Extraemos los Ingresos netos, partiendo por el año 2010 con una frecuencia de
-# cuatro veces por año.
-
-Ing_net_ts <-
-  ts(Hites_EEFF$`+Ingresos netos...63`,
-     start = c(2010, 1),
-     frequency = 4)
-
-# Imprimimos los datos antes de modelarlos
-print(Ing_net_ts)
-
-# Generamos un gráfico que muestra un pronóstico para el movimiento de los
-# ingresos netos de Hites S.A.
-
-autoplot(
-  forecast(Ing_net_ts),
-  facets = TRUE,
-  xlab = "Periodo",
-  ylab = "Monto",
-  main = "Pronóstico para los Ingresos Netos de Hites S.A."
-) +
-  scale_y_continuous(
-    labels = function(x)
-      format(x, big.mark = ".", scientific = FALSE)
-  )
-
-# Vemos un resumen sobre el pronóstico del Ingreso Neto
-summary(forecast(Ing_net_ts))
-
 # Gráfico de la evolución de los ingresos netos de Hites S.A.
-ggplot(data = Hites_EEFF, aes(y = `+Ingresos netos...5`,
+ggplot(data = Hites_EEFF, aes(y = `+Ingresos netos...63`,
                               x = Fechas)) +
   geom_line(col = "#addd8e", size = 0.5) +  geom_point(col = "#85aa6d", size = 2) +
   ggtitle("Evolución de los Ingresos Netos de Hites S.A.",
@@ -332,6 +244,111 @@ ggplot(data = Hites_EEFF, aes(y = `+Ingresos netos...5`,
   ) + xlab("Fecha de corte") +
   ylab("Monto")  + scale_x_datetime(date_labels = "%Y-%m-%d", date_breaks = "year")
 
+#--------------------------------FORECASTING------------------------------------
+
+#INGRESOS NETOS DE HITES S.A.
+Ing_net_ts <-
+  ts(
+    Hites_EEFF$`+Ingresos netos...63`,
+    start = c(2010, 1),
+    end = c(2023, 1),
+    frequency = 4
+  )
+
+# Imprimimos los datos antes de modelarlos
+print(Ing_net_ts)
+
+# Descomposición
+autoplot(decompose(Ing_net_ts))
+autoplot(log(Ing_net_ts))
+
+# Esta es la diferencia entre los valores
+diff(Ing_net_ts)
+
+# Generamos un plot de las diferencias
+autoplot(diff(Ing_net_ts),
+         xlab = "Tiempo",
+         ylab = "Monto",
+         main = "Primera diferencia de los Ingresos Netos")
+
+# Niveles de residuos
+acf(Ing_net_ts)
+
+# Niveles de significancia
+pacf(Ing_net_ts)
+
+# Vemos un resumen sobre el pronóstico del Ingreso Neto
+forecast(Ing_net_ts)
+
+# Consulta mejor modelo para los datos
+arima_ing.net <-
+  auto.arima(
+    Ing_net_ts,
+    stepwise = FALSE,
+    approximation = FALSE,
+    trace = TRUE
+  )
+
+print(arima_ing.net)
+
+# Revisamos los resultados
+checkresiduals(arima_ing.net)
+
+# Generamos un gráfico que muestra un pronóstico para el movimiento de los
+# ingresos netos de Hites S.A. Con un grado de confianza del 95%
+
+autoplot(
+  forecast(arima_ing.net),
+  facets = TRUE,
+  xlab = "Periodo",
+  ylab = "Monto",
+  main = "Pronóstico para los Ingresos Netos de Hites S.A."
+) +
+  scale_y_continuous(
+    labels = function(x)
+      format(x, big.mark = ".", scientific = FALSE)
+  ) +  scale_x_continuous(breaks = seq(2010, 2026, 1))
+
+#----------------- Pronóstico del ratio de liquidez
+
+liq_rt <- ts(
+  Ratios$Liquidez,
+  start = c(2010, 1),
+  end = c(2023, 1),
+  frequency = 4
+)
+
+# Imprimimos los datos antes de modelarlos
+print(liq_rt)
+
+# Descomposición
+autoplot(decompose(liq_rt))
+autoplot(log(liq_rt))
+
+# Esta es la diferencia entre los valores
+diff(liq_rt)
+
+# Generamos un plot de las diferencias
+autoplot(diff(liq_rt),
+         xlab = "Tiempo",
+         ylab = "Ratio",
+         main = "Primera diferencia del ratio de liquidez")
+
+# Generamos un pronóstico en base a ETS, dado que no es un modelo estacionario
+
+autoplot(
+  forecast(liq_rt),
+  facets = TRUE,
+  xlab = "Periodo",
+  ylab = "Ratio",
+  main = "Pronóstico para el ratio de liquidez de Hites S.A."
+) +
+  scale_y_continuous(breaks = seq(0, 4, 0.5)) +
+  scale_x_continuous(breaks = seq(2010, 2026, 1)) 
+
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
 gc()
+
+# Limpieza del environment
+rm(list = ls())
