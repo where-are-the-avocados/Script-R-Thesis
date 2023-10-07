@@ -25,7 +25,7 @@ library(forecast)
 library(readr)
 sample_submission <-
   read_csv(
-    "Dataset/Dataset2/sample_submission.csv",
+    "Dataset/sample_submission.csv",
     locale = locale(decimal_mark = ",", grouping_mark = "."),
     na = "NA",
     comment = "#"
@@ -33,7 +33,7 @@ sample_submission <-
 View(sample_submission)
 
 test <- read_csv(
-  "Dataset/Dataset2/test.csv",
+  "Dataset/test.csv",
   locale = locale(decimal_mark = ",", grouping_mark = "."),
   na = "NA",
   comment = "#"
@@ -41,7 +41,7 @@ test <- read_csv(
 View(test)
 
 train <- read_csv(
-  "Dataset/Dataset2/train.csv",
+  "Dataset/train.csv",
   locale = locale(decimal_mark = ",", grouping_mark = "."),
   na = "NA",
   comment = "#"
@@ -61,6 +61,30 @@ View(train)
 # store - (ID Tienda) Store ID
 # item - (ID Producto)
 # sales - (Ventas) Número de productos vendidos en una tienda específica en una fecha específica.
+
+# Funciones que permiten identificar la estructura del Dataset
+head(train)
+tail(train)
+structure(train)
+glimpse(train)
+str(train)
+dim(train)
+nrow(train)
+ncol(train)
+ls(train)
+names(train)
+summary(train)
+glimpse(summary(train))
+names(train)
+
+# Tendencia Central
+mean(train$sales)
+median(train$sales)
+
+# Medidas de Variabilidad
+range(train$date)
+var(train$sales)
+sd(train$sales)
 
 #------------------------------LIMPIEZA DEL DATASET----------------------------#
 
@@ -204,66 +228,111 @@ ggplot(Años, aes(x = Año, y = Tasa)) +
       paste0(x, "%")
   ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-#------------------------------------TIENDAS------------------------------------
+#-------------------------------TIENDAS E ITEMS---------------------------------
+
+# Para llevar a cabo la aplicación de forecast, utilizaremos los vectores
+# creados en la sección anterior
+
+#-------------EJERCICIO 1
+Ventas_TS <- ts(Sum_fecha$sales,
+                start=2013,
+                frequency=365)
+
+print(Ventas_TS)
+
+ggseasonplot(Ventas_TS, 
+             xlab="Tiempo",
+             ylab="Ventas") + 
+  labs(title="Evolución de las ventas diarias", 
+       subtitle = "Comparación año tras año del total de ventas acumuladas") +
+  scale_y_continuous(breaks= seq(0,100000,5000)) +
+  scale_x_continuous(breaks=c(0,0.25,0.5,0.75,1),labels=c("Enero","Marzo","Junio","Septiembre","Diciembre"))
+
+plot(forecast(Ventas_TS))
+#-------------EJERCICIO 2
+
+Sum_fecha_TS <-
+  ts(
+    Sum_fecha$tasa,
+    start = 2013, 
+    frequency = 365
+  )
+# Aplicamos test de Dickey-Fuller
+# p-valor pequeño -> Rechazar H0 y la serie SÍ es estacionaria
+# p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
+tseries::adf.test(diff(Sum_fecha_TS))
+
+# Al ser estacionaria aplicamos el modelo ETS para pronosticar
+autoplot(forecast(Sum_fecha_TS),
+         xlab="Periodos",
+         ylab="Tasa",
+         main="Pronóstico de las tasas de crecimiento diarias")
+
+#-------------EJERCICIO 3
+
+# Ahora pronosticaremos por partes, en este caso, será
+Tienda1 <- train %>% filter(store == 1, item == 1)
+
+# Imprimimos el vector
+print(Tienda1)
+
+# Generamos una serie de tiempo, es importante que el formato sea ts para
+# que forecast pueda usarse
+
+Tienda1_TS <-
+  ts(
+    Tienda1$sales,
+    start = 2013,
+    frequency = 365
+  )
+
+# Descomposición de los datos
+autoplot(decompose(Tienda1_TS))
+# data:
+# trend:
+# seasonal:
+# remainder: 
+
+# 
+
+autoplot(log(Tienda1_TS))
+
+# Esta es la diferencia entre los valores
+diff(Tienda1_TS)
+
+# Generamos un plot de las diferencias
+autoplot(diff(Tienda1_TS),
+         xlab = "Tiempo",
+         ylab = "Monto",
+         main = "Primera diferencia de los Ingresos Netos")
+
+# Aplicamos test de Dickey-Fuller
+# p-valor pequeño -> Rechazar H0 y la serie SÍ es estacionaria
+# p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
+tseries::adf.test(diff(Tienda1_TS))
+
+# Al ser una serie de tiempo estacionaria, utilizamos la función forecast() la cual
+# nos permite pronosticar utilizando el modelo ETS
+autoplot(forecast(Tienda1_TS),
+         xlab="Fechas",
+         ylab="Ventas",
+         main="Pronóstico del item 1 en la tienda 1") 
+
+#-------------EJERCICIO 4
+
+Meses_TS <-  ts(
+  Meses$sum_of_sales,
+  start = 2013,
+  frequency = 12
+)
+
+print(Meses_TS)
+tseries::adf.test(diff(Meses_TS))
+plot(forecast(Meses_TS))
+
+#-------------EJERCICIO 4
 
 
-#----------------------------------FORECASTING----------------------------------
-
-train_sample <- data.table::setDT(train)[store == 1 & item == 45]
-print(train_sample)
-# Crear una serie de tiempo
-
-Ventas_ts <- ts(train_sample[,c("sales")],     
-           start = c(2013,1),
-           frequency = 365)
-
-print(Ventas_ts)
-
-autoplot(Ventas_ts)
-
-ggseasonplot(Ventas_ts)
-
-gglagplot(Ventas_ts)
-ggAcf(Ventas_ts)
-
-fcnv <- naive(Ventas_ts, h = 90)
-autoplot(fcnv)
-
-fcsnv <- snaive(Ventas_ts, h = 90)
-autoplot(fcsnv)
-
-fcses <- ses(Ventas_ts, h = 90)
-autoplot(fcses)
-
-# Create a training set using subset()
-train <- subset(Ventas_ts, end = length(Ventas_ts) - 365)
-
-# Compute SES and naive forecasts, save to fcses and fcnaive
-fcses <- ses(train, h = 365)
-fcsnaive <- snaive(train, h = 365)
-
-# Calculate forecast accuracy measures
-accuracy(fcses, Ventas_ts)
-
-
-#Running the Seasonal Naive forecasting with the accuracy summary  
-
-accuracy(fcsnaive, Ventas_ts)
-
-
-fcholt <- holt(Ventas_ts, h =90)
-autoplot(fcholt)
-checkresiduals(fcholt)
-
-fchws <- hw(Ventas_ts, seasonal = "multiplicative", h = 90)
-
-fcets <- ets(Ventas_ts)
-autoplot(forecast(Ventas_ts))
-checkresiduals(Ventas_ts)
-
-fcarima <- auto.arima(Ventas_ts)
-fcarima %>% forecast(h = 90) %>% autoplot()
-checkresiduals(fcarima)
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
 gc()
