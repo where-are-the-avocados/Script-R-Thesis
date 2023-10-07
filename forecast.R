@@ -199,11 +199,13 @@ print(Años)
 
 # Creamos un gráfico que nos muestra el crecimiento de las ventas por fechas
 ggplot(Años, aes(x = Año, y = Total_de_Ventas)) +
-  geom_line(col="red", size=1.5) +
-  labs(title = "Crecimiento año a año de las ventas",
-       x = "Fechas",
-       y = "Montos",
-       subtitle="Comprende el total de todas las tiendas al cierre del periodo (31 de diciembre)") +
+  geom_line(col = "red", size = 1.5) +
+  labs(
+    title = "Crecimiento año a año de las ventas",
+    x = "Fechas",
+    y = "Montos",
+    subtitle = "Comprende el total de todas las tiendas al cierre del periodo (31 de diciembre)"
+  ) +
   scale_x_date(date_labels = "%Y", date_breaks = "year") +
   scale_y_continuous(
     labels = function(x)
@@ -235,38 +237,44 @@ ggplot(Años, aes(x = Año, y = Tasa)) +
 
 #-------------EJERCICIO 1
 Ventas_TS <- ts(Sum_fecha$sales,
-                start=2013,
-                frequency=365)
+                start = 2013,
+                frequency = 365)
 
 print(Ventas_TS)
 
-ggseasonplot(Ventas_TS, 
-             xlab="Tiempo",
-             ylab="Ventas") + 
-  labs(title="Evolución de las ventas diarias", 
+ggseasonplot(Ventas_TS,
+             xlab = "Tiempo",
+             ylab = "Ventas") +
+  labs(title = "Evolución de las ventas diarias",
        subtitle = "Comparación año tras año del total de ventas acumuladas") +
-  scale_y_continuous(breaks= seq(0,100000,5000)) +
-  scale_x_continuous(breaks=c(0,0.25,0.5,0.75,1),labels=c("Enero","Marzo","Junio","Septiembre","Diciembre"))
+  scale_y_continuous(breaks = seq(0, 100000, 5000)) +
+  scale_x_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("Enero", "Marzo", "Junio", "Septiembre", "Diciembre")
+  )
 
-plot(forecast(Ventas_TS))
+plot(forecast(Ventas_TS),
+     xlab = "Fechas",
+     ylab = "Cantidad",
+     main = "Pronóstico de las ventas diarias para los próximos dos periodos")
 #-------------EJERCICIO 2
 
 Sum_fecha_TS <-
-  ts(
-    Sum_fecha$tasa,
-    start = 2013, 
-    frequency = 365
-  )
+  ts(Sum_fecha$tasa,
+     start = 2013,
+     frequency = 365)
 # Aplicamos test de Dickey-Fuller
 # p-valor pequeño -> Rechazar H0 y la serie SÍ es estacionaria
 # p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
 tseries::adf.test(diff(Sum_fecha_TS))
 
 # Al ser estacionaria aplicamos el modelo ETS para pronosticar
-autoplot(forecast(Sum_fecha_TS),
-         xlab="Periodos",
-         ylab="Tasa",
-         main="Pronóstico de las tasas de crecimiento diarias")
+autoplot(
+  forecast(Sum_fecha_TS),
+  xlab = "Periodos",
+  ylab = "Tasa",
+  main = "Pronóstico de las tasas de crecimiento diarias"
+)
 
 #-------------EJERCICIO 3
 
@@ -280,20 +288,18 @@ print(Tienda1)
 # que forecast pueda usarse
 
 Tienda1_TS <-
-  ts(
-    Tienda1$sales,
-    start = 2013,
-    frequency = 365
-  )
+  ts(Tienda1$sales,
+     start = 2013,
+     frequency = 365)
 
 # Descomposición de los datos
 autoplot(decompose(Tienda1_TS))
 # data:
 # trend:
 # seasonal:
-# remainder: 
+# remainder:
 
-# 
+#
 
 autoplot(log(Tienda1_TS))
 
@@ -314,17 +320,15 @@ tseries::adf.test(diff(Tienda1_TS))
 # Al ser una serie de tiempo estacionaria, utilizamos la función forecast() la cual
 # nos permite pronosticar utilizando el modelo ETS
 autoplot(forecast(Tienda1_TS),
-         xlab="Fechas",
-         ylab="Ventas",
-         main="Pronóstico del item 1 en la tienda 1") 
+         xlab = "Fechas",
+         ylab = "Ventas",
+         main = "Pronóstico del item 1 en la tienda 1")
 
 #-------------EJERCICIO 4
 
-Meses_TS <-  ts(
-  Meses$sum_of_sales,
-  start = 2013,
-  frequency = 12
-)
+Meses_TS <-  ts(Meses$sum_of_sales,
+                start = 2013,
+                frequency = 12)
 
 print(Meses_TS)
 tseries::adf.test(diff(Meses_TS))
