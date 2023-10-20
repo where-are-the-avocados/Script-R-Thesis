@@ -348,7 +348,7 @@ ggplot(Productos, aes(group = Producto)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) + 
   scale_color_continuous(name = "Producto", type = "viridis")
 
-#-------------------------------TIENDAS E ITEMS---------------------------------
+#-------------------------------FORECASTING---------------------------------
 
 # Para llevar a cabo la aplicación de forecast, utilizaremos los vectores
 # creados en la sección anterior
@@ -490,10 +490,14 @@ tseries::adf.test(diff(Tienda1_TS))
 # de la última observación.
 
 # Aplicamos la función naive
-autoplot(naive(Tienda1_TS, h = 90))
+autoplot(naive(Tienda1_TS, h = 90),
+         main="Pronóstico para los próximos seis meses") +
+  labs(subtitle = "Calculado mediante el método naive")
 
 # Método naive con estacionalidad
-autoplot(snaive(Tienda1_TS, h = 90))
+autoplot(snaive(Tienda1_TS, h = 90),
+         main="Pronóstico para los próximos seis meses") +
+  labs(subtitle = "Calculado mediante el método Snaive")
 
 # Al ser una serie de tiempo estacionaria, utilizamos la función forecast() la cual
 # nos permite pronosticar utilizando el modelo ETS
@@ -506,7 +510,6 @@ autoplot(
 ) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10),
                      labels = Fechas_funcion) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 
 #-------------EJERCICIO 4
 
