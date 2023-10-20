@@ -1,9 +1,15 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
 install.packages("tidyverse",
+                 # Trae todas las herramientas necesarias para modificar datos y hacer gráficos
                  "lubridate",
+                 # Permite trabajar con fechas
                  "forecast",
+                 # Permite hacer pronósticos
                  "readxl",
-                 "summarytools")
+                 # Funciones para cargar archivos
+                 "summarytools",
+                 # Estadística descriptiva
+                 "zoo")          # Herrramientas para modificar fechas, similar a lubridate
 
 update.packages()
 #--------------------REVISIÓN DE SESIÓN DE RSTUDIO------------------------------
@@ -18,10 +24,10 @@ getwd()
 
 #------------------CARGAR LIBRERIAS DE PAQUETES DE INVESTIGACIÓN----------------
 library(tidyverse)
-library(stargazer)
 library(lubridate)
 library(forecast)
 library(summarytools)
+library(zoo)
 
 #-----------------DESARROLLO DEL CÓDIGO PARA LA INVESTIGACIÓN-------------------
 # Importación de los Datasets
@@ -60,7 +66,7 @@ View(train)
 # sample_submission.csv - Ventas e ID
 
 # Generalmente, se dividen los datasets en dos partes diferentes:
-# el training data, tiene por objetivo estimar los parametros para un método
+# el training data, tiene por objetivo estimar los parámetros para un método
 # de pronóstico, y el test data es para evaluar su exactitud; dado que el
 # test data no es utilizado para hacer pronósticos, debería ser de utilidad para
 # ser un indicador fiable sobre qué tan bien se ajustan los modelos a los datos.
@@ -92,6 +98,7 @@ median(train$sales)
 
 # Medidas de Variabilidad
 range(train$date)
+range(train$sales)
 var(train$sales)
 sd(train$sales)
 
@@ -116,35 +123,58 @@ print(test) # La columna date tiene formato <date>
 train$date <- as.Date(train$date, format = "%Y/%m/%d")
 print(train) # La columna date tiene formato <date>
 
+# Extracción del año y el mes del año
+# Estas funciones del paquete zoo serán de utilidad más adelante, en conjunto
+# con el paquete dplyr, se agruparán los datos en función del mes y del año.
+
+print(train) # Observamos que se han creado dos columnas con información extraida de la columna date
+
+# Función que permite renombrar las columnas
+colnames(train) <- c("Fechas","Tienda","Producto","Ventas") 
+
+print(train)
+
+train$Año = year(train$Fechas)        # Devuelve el año de una fecha
+train$Mes = as.yearmon(train$Fechas)  # Devuelve el mes de una fecha
+
+# Creamos una función que permite formatear las fechas con el mes, con el fin
+# de dar gráficos más detallados
+
+Fechas_funcion <- function(x) {
+  format(date_decimal(x), "%b-%Y")
+}
+
 #----------------------------ANÁLISIS DE LOS DATASETS---------------------------#
 
 # Histograma de las ventas, distribuidas por su frecuencia
-ggplot(train, aes(x = sales)) +
+ggplot(train, aes(x = Ventas)) +
   geom_histogram(col = "black",
                  fill = "steelblue",
                  bins = 30) +
   ggtitle("Histograma de Precios de Venta") + xlab("Ventas") + ylab("Frecuencia") +
   scale_x_continuous(breaks = seq(0, 300, 10)) +
-  scale_y_continuous(breaks = seq(0, 120000, 10000),
-                     labels = function(x)
-                       format(x, big.mark = ".", scientific = FALSE))
+  scale_y_continuous(
+    breaks = seq(0, 120000, 10000),
+    labels = function(x)
+      format(x, big.mark = ".", scientific = FALSE)
+  )
 
 # Creamos un vector que nos muestre las ventas totales por día
-Sum_fecha <-  select(train, sales, date) %>%
-  group_by(date) %>%
-  summarise(sales = sum(sales))
+Sum_fecha <-  select(train, Ventas, Fechas) %>%
+  group_by(Fechas) %>%
+  summarise(Ventas = sum(Ventas))
 
 # Imprimimos el vector para revisarlo
 print(Sum_fecha)
 
 # Convertimos la columnda date a <date>
-Sum_fecha$date <- as.Date(Sum_fecha$date, format = "%Y-%m-%d")
+Sum_fecha$date <- as.Date(Sum_fecha$Fechas, format = "%Y-%m-%d")
 
 # Imprimimos para confirmar que funcionó
 print(Sum_fecha)
 
 # Creamos un gráfico que nos muestra el crecimiento de las ventas por fechas
-ggplot(Sum_fecha, aes(x = date, y = sales)) +
+ggplot(Sum_fecha, aes(x = Fechas, y = Ventas)) +
   geom_line() +
   labs(
     title = "Crecimiento de las ventas",
@@ -156,13 +186,13 @@ ggplot(Sum_fecha, aes(x = date, y = sales)) +
   scale_y_continuous(breaks = seq(0, 50000, 5000)) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Creamos un vector que nos muestre la tasa de crecimiento por fecha
-Sum_fecha$tasa = c(0, 100 * diff(Sum_fecha$sales) / Sum_fecha[-nrow(Sum_fecha),]$sales)
+Sum_fecha$Tasa = c(0, 100 * diff(Sum_fecha$Ventas) / Sum_fecha[-nrow(Sum_fecha),]$Ventas)
 
 # Imprimimos el vector con la nueva columna
 print(Sum_fecha)
 
 # Creamos un gráfico que nos muestre la nueva columna creada
-ggplot(Sum_fecha, aes(x = date, y = tasa)) +
+ggplot(Sum_fecha, aes(x = Fechas, y = Tasa)) +
   geom_point(aes(group = 1), size = 1) +
   geom_smooth(method = "lm", col = "red") + ggtitle("Tasa de crecimiento del Precio de Venta",
                                                     subtitle = "Implica la diferencia entre el total de ventas del día, con su antecesor inmediato") +
@@ -176,14 +206,14 @@ ggplot(Sum_fecha, aes(x = date, y = tasa)) +
   scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Creamos un vector que nos muestre las ventas totales por mes
-Meses <-  select(train, sales, date) %>%
-  group_by(month = floor_date(date, "month")) %>%
-  summarise(sum_of_sales = sum(sales))
+Meses <-  select(train, Ventas, Fechas) %>%
+  group_by(Mes = floor_date(Fechas, "month")) %>%
+  summarise(Total_de_Ventas = sum(Ventas))
 
 print(Meses)
 
 # Creamos un gráfico que nos muestra el crecimiento de las ventas por fechas
-ggplot(Meses, aes(x = month, y = sum_of_sales)) +
+ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
   geom_line() +
   labs(
     title = "Crecimiento mes a mes de las ventas",
@@ -199,9 +229,9 @@ ggplot(Meses, aes(x = month, y = sum_of_sales)) +
   ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Creamos un vector que nos muestre la tasa de crecimiento por fecha
-Meses$tasa = c(0, 100 * diff(Meses$sum_of_sales) / Meses[-nrow(Meses),]$sum_of_sales)
+Meses$Tasa = c(0, 100 * diff(Meses$Total_de_Ventas) / Meses[-nrow(Meses),]$Total_de_Ventas)
 
-ggplot(Meses, aes(x = month, y = tasa)) +
+ggplot(Meses, aes(x = Mes, y = Tasa)) +
   geom_line(aes(group = 1)) + ggtitle("Tasa de crecimiento del precio de venta",
                                       subtitle = "Implica la diferencia entre el total de ventas del mes, con su antecesor inmediato") +
   xlab("Fechas") + ylab("Tasas") +
@@ -215,9 +245,9 @@ ggplot(Meses, aes(x = month, y = tasa)) +
   ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Creamos un vector que nos muestre las ventas totales por mes
-Años <-  select(train, sales, date) %>%
-  group_by(Año = floor_date(date, "year")) %>%
-  summarise(Total_de_Ventas = sum(sales))
+Años <-  select(train, Ventas, Fechas) %>%
+  group_by(Año = floor_date(Fechas, "year")) %>%
+  summarise(Total_de_Ventas = sum(Ventas))
 
 print(Años)
 
@@ -257,10 +287,10 @@ ggplot(Años, aes(x = Año, y = Tasa)) +
 # Agrupación de ventas de Enero 2015
 
 Enero2015 <- train %>%
-  select(date, store, item, sales) %>%
-  filter(between(date, as.Date("2015-01-01"), as.Date("2015-01-31"))) %>%
-  group_by(Dia = floor_date(date, "day")) %>%
-  summarise(Total_Ventas = sum(sales))
+  select(Fechas, Tienda, Producto, Ventas) %>%
+  filter(between(Fechas, as.Date("2015-01-01"), as.Date("2015-01-31"))) %>%
+  group_by(Dia = floor_date(Fechas, "day")) %>%
+  summarise(Total_Ventas = sum(Ventas))
 
 print(Enero2015)
 
@@ -275,10 +305,10 @@ ggplot(Enero2015, aes(x = Dia, y = Total_Ventas)) + geom_col() +
   scale_y_continuous(breaks = seq(0, 25000, 2000))
 
 Meses2015 <- train %>%
-  select(date, store, item, sales) %>%
-  filter(between(date, as.Date("2015-01-01"), as.Date("2015-12-31"))) %>%
-  group_by(Mes = floor_date(date, "month")) %>%
-  summarise(Total_Ventas = sum(sales))
+  select(Fechas, Tienda, Producto, Ventas) %>%
+  filter(between(Fechas, as.Date("2015-01-01"), as.Date("2015-12-31"))) %>%
+  group_by(Mes = floor_date(Fechas, "month")) %>%
+  summarise(Total_Ventas = sum(Ventas))
 
 print(Meses2015)
 
@@ -288,40 +318,50 @@ ggplot(Meses2015, aes(x = Mes, y = Total_Ventas)) + geom_col() +
                date_breaks = "month") +
   labs(title = "Ventas del año 2015",
        y = "Ventas",
-       x = "Mes") + scale_y_continuous(labels = function(x)
-                                         format(x, big.mark = ".", scientific = FALSE),
-                                       breaks=seq(0,1200000,150000)) + theme_bw()
+       x = "Mes") + scale_y_continuous(
+         labels = function(x)
+           format(x, big.mark = ".", scientific = FALSE),
+         breaks = seq(0, 1200000, 150000)
+       ) + theme_bw()
 
-#-------------------------------FORECAST----------------------------------------
-#forecast(object, h=ifelse(object$m>1, 2*object$m, 10),
-#         level=c(80,95), fan=FALSE, simulate=FALSE, bootstrap=FALSE,
-#         npaths=5000, PI=TRUE, lambda=object$lambda, biasadj=NULL, ...)
+# Ventas por tienda
+unique(train$Tienda)
+Tiendas <- aggregate(Ventas ~ Tienda + Año, train, mean)
+print(Tiendas)
 
-#object=
+ggplot(Tiendas, aes(group = Tienda)) +
+  geom_line(aes(x = Año, y = Ventas, col = Tienda), size=1, show.legend = TRUE) +
+  labs(title = "Crecimiento promedio de las tiendas entre los años 2013 a 2017",
+       y = "Ventas") + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion)+ 
+  scale_color_continuous(name = "Tienda", type = "viridis",trans = "sqrt")
 
+# Ventas por item
+unique(train$Producto)
+Productos <- aggregate(Ventas ~ Producto + Año, train, mean)
+print(Productos)
 
-
+ggplot(Productos, aes(group = Producto)) +
+  geom_line(aes(x = Año, y = Ventas, col = Producto), size=1, show.legend = TRUE) +
+  labs(title = "Crecimiento promedio de las ventas de productos entre los periodos 2013 a 2017",
+       y = "Ventas") + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) + 
+  scale_color_continuous(name = "Producto", type = "viridis")
 
 #-------------------------------TIENDAS E ITEMS---------------------------------
 
 # Para llevar a cabo la aplicación de forecast, utilizaremos los vectores
 # creados en la sección anterior
 
-# Creamos una función que permite formatear las fechas con el mes, con el fin
-# de dar gráficos más detallados
-Fechas_funcion <- function(x) {
-  format(date_decimal(x), "%b-%Y")
-}
-
 #-------------EJERCICIO 1
 
-Ventas_TS <- ts(Sum_fecha$sales, # Tomamos la columna ventas del df
+Ventas_TS <- ts(Sum_fecha$Ventas, # Tomamos la columna ventas del df
                 start = 2013,    # Le indicamos que inicia el 2013, ts() calcula automaticamente el final
                 frequency = 365) # Como los datos son diarios, le indicamos 365
 
 # Si son datos anuales, frequency = 1
-# Si son datos mensuales, es frequency = 12
 # Si son datos trimestrales, frequency = 4
+# Si son datos mensuales, es frequency = 12
 # Si son datos semanales, frequency = 52
 
 print(Ventas_TS)
@@ -363,12 +403,12 @@ autoplot(forecast(Ventas_TS),
          xlab = "Fechas",
          ylab = "Cantidad",
          main = "Pronóstico de las ventas diarias para los próximos dos periodos") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 20),labels = Fechas_funcion) +
-   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 20), labels = Fechas_funcion) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 #-------------EJERCICIO 2
 
-TasaMensual_TS <- ts(Meses$tasa,
+TasaMensual_TS <- ts(Meses$Tasa,
                      start = 2013,
                      frequency = 12)
 
@@ -397,12 +437,12 @@ autoplot(
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10),
                      labels = Fechas_funcion) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-#-------------EJERCICIO 2
+#-------------EJERCICIO 3
 
 # Ahora pronosticaremos por partes, en este caso, será
-Tienda1 <- train %>% filter(store == 1, item == 1) %>%
-  group_by(date = floor_date(date, "day")) %>%
-  summarise(Total_de_Ventas = sum(sales))
+Tienda1 <- train %>% filter(Tienda == 1, Producto == 1) %>%
+  group_by(Fecha = floor_date(Fechas, "day")) %>%
+  summarise(Total_de_Ventas = sum(Ventas))
 
 # Imprimimos el vector
 print(Tienda1)
@@ -445,7 +485,6 @@ autoplot(diff(Tienda1_TS),
 # p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
 tseries::adf.test(diff(Tienda1_TS))
 
-
 # Para series de tiempo con una alta estacionalidad, se puede utilizar el
 # método naive, este consiste en que cada predicción sea igual al último valor
 # de la última observación.
@@ -469,10 +508,10 @@ autoplot(
                      labels = Fechas_funcion) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
-#-------------EJERCICIO 3
+#-------------EJERCICIO 4
 
 Meses_TS <-
-  ts(Meses$sum_of_sales, # Indicamos la columna que queremos pronosticar
+  ts(Meses$Total_de_Ventas, # Indicamos la columna que queremos pronosticar
      start = 2013,       # Indicamos el año de inicio
      frequency = 12)     # Al ser datos mensuales, la frecuencia es 12
 
@@ -492,7 +531,7 @@ ggsubseriesplot(Meses_TS) + ylab("Ventas") + xlab("Meses") + ggtitle("Gráfico d
 
 # Aplicamos test de Dickey-Fuller
 # p-valor pequeño -> Rechazar H0 y la serie SÍ es estacionaria
-# p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
+# p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria 
 tseries::adf.test(Meses_TS)
 
 # Revisamos los datos de manera descompuesta
@@ -514,8 +553,43 @@ autoplot(
                      labels = Fechas_funcion) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
-# --------------EJERCICIO 4
+# --------------EJERCICIO 5
+# Creamos un subset con el item 5
+# Usaremos este item porque tiene un evento en particular que rompe con la estacionalidad
+# De este modo, mostraremos la comparación entre los distintos métodos de pronóstico.
 
+
+Tienda2 <- train %>% filter(Producto == 5) %>%
+  group_by(Semanas = floor_date(Fechas, "week")) %>% # Son las ventas semanales
+  summarise(Venta_Semanal = sum(Ventas))
+
+# Creamos una serie de tiempo para pronosticar
+Tienda2_TS <- ts(Tienda2$Venta_Semanal,
+                 start=2013,
+                 frequency = 52) # Este es el comando para semanas
+
+# Creamos un pronostico con la función más básica de forecast
+autoplot(forecast(Tienda2_TS),
+         main="Pronóstico de ventas semanales con ETS",
+         xlab="Tiempo",
+         ylab="Ventas semanales") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 20),
+                     labels = Fechas_funcion) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(breaks=seq(0,2000,250)) + 
+  labs(subtitle="Corresponde únicamente al producto 5")
+
+# Con snaive, podemos visualizar que el pronostico es diferente, dado que
+# basa los movimientos futuros en relación al último periodo
+autoplot(snaive(Tienda2_TS),
+         main="Pronóstico de ventas semanales con Snaive",
+         xlab="Tiempo",
+         ylab="Ventas semanales") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 20),
+                     labels = Fechas_funcion) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(breaks=seq(0,5000,250)) + 
+  labs(subtitle="Corresponde únicamente al producto 5")
 
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
