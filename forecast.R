@@ -1,17 +1,18 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
-install.packages("tidyverse",
-                 # Trae todas las herramientas necesarias para modificar datos y hacer gráficos
-                 "lubridate",
-                 # Permite trabajar con fechas
-                 "forecast",
-                 # Permite hacer pronósticos
-                 "readxl",
-                 # Funciones para cargar archivos
-                 "summarytools",
-                 # Estadística descriptiva
-                 "zoo")          # Herrramientas para modificar fechas, similar a lubridate
+# # install.packages("tidyverse",
+#                  # Trae todas las herramientas necesarias para modificar datos y hacer gráficos
+#                  "lubridate",
+#                  # Permite trabajar con fechas
+#                  "forecast",
+#                  # Permite hacer pronósticos
+#                  "readxl",
+#                  # Funciones para cargar archivos
+#                  "summarytools",
+#                  # Estadística descriptiva
+#                  "zoo")          # Herrramientas para modificar fechas, similar a lubridate
+# 
+# update.packages()
 
-update.packages()
 #--------------------REVISIÓN DE SESIÓN DE RSTUDIO------------------------------
 sessionInfo()
 options(scipen = 99999) # Permite aumentar la cantidad de dígitos de los números en los gráficos
@@ -130,7 +131,7 @@ print(train) # La columna date tiene formato <date>
 print(train) # Observamos que se han creado dos columnas con información extraida de la columna date
 
 # Función que permite renombrar las columnas
-colnames(train) <- c("Fechas","Tienda","Producto","Ventas") 
+colnames(train) <- c("Fechas", "Tienda", "Producto", "Ventas")
 
 print(train)
 
@@ -194,16 +195,17 @@ print(Sum_fecha)
 # Creamos un gráfico que nos muestre la nueva columna creada
 ggplot(Sum_fecha, aes(x = Fechas, y = Tasa)) +
   geom_point(aes(group = 1), size = 1) +
-  geom_smooth(method = "lm", col = "red") + ggtitle("Tasa de crecimiento del Precio de Venta",
-                                                    subtitle = "Implica la diferencia entre el total de ventas del día, con su antecesor inmediato") +
+  geom_smooth(method = "lm") + ggtitle("Tasa de crecimiento del Precio de Venta",
+                                       subtitle = "Implica la diferencia entre el total de ventas del día, con su antecesor inmediato") +
   xlab("Fechas") + ylab("Tasas") +
-  geom_hline(yintercept = 0, col = "blue")  +
+  geom_hline(yintercept = 0)  +
   scale_y_continuous(
     breaks = seq(-50, 50, 10),
     labels = function(x)
       paste0(x, "%")
   ) +
   scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 
 # Creamos un vector que nos muestre las ventas totales por mes
 Meses <-  select(train, Ventas, Fechas) %>%
@@ -232,12 +234,15 @@ ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
 Meses$Tasa = c(0, 100 * diff(Meses$Total_de_Ventas) / Meses[-nrow(Meses),]$Total_de_Ventas)
 
 ggplot(Meses, aes(x = Mes, y = Tasa)) +
-  geom_line(aes(group = 1)) + ggtitle("Tasa de crecimiento del precio de venta",
-                                      subtitle = "Implica la diferencia entre el total de ventas del mes, con su antecesor inmediato") +
+  geom_line(aes(group = 1), color = "#ae93be", size = 1) + ggtitle("Tasa de crecimiento mensual de las ventas",
+                                                                   subtitle = "Implica la diferencia entre el total de ventas del mes, con su antecesor inmediato") +
   xlab("Fechas") + ylab("Tasas") +
-  geom_hline(yintercept = 0,
-             col = "blue",
-             linetype = "dotted") + scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") +
+  geom_hline(
+    yintercept = 0,
+    col = "#f0d77b",
+    size = 1,
+    linetype = "dotted"
+  ) + scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") +
   scale_y_continuous(
     breaks = seq(-50, 50, 10),
     labels = function(x)
@@ -330,11 +335,13 @@ Tiendas <- aggregate(Ventas ~ Tienda + Año, train, mean)
 print(Tiendas)
 
 ggplot(Tiendas, aes(group = Tienda)) +
-  geom_line(aes(x = Año, y = Ventas, col = Tienda), size=1, show.legend = TRUE) +
+  geom_line(aes(x = Año, y = Ventas, col = Tienda),
+            size = 1,
+            show.legend = TRUE) +
   labs(title = "Crecimiento promedio de las tiendas entre los años 2013 a 2017",
-       y = "Ventas") + 
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion)+ 
-  scale_color_continuous(name = "Tienda", type = "viridis",trans = "sqrt")
+       y = "Ventas") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) +
+  scale_color_continuous(name = "Tienda", type = "viridis", trans = "sqrt")
 
 # Ventas por item
 unique(train$Producto)
@@ -342,10 +349,12 @@ Productos <- aggregate(Ventas ~ Producto + Año, train, mean)
 print(Productos)
 
 ggplot(Productos, aes(group = Producto)) +
-  geom_line(aes(x = Año, y = Ventas, col = Producto), size=1, show.legend = TRUE) +
+  geom_line(aes(x = Año, y = Ventas, col = Producto),
+            size = 1,
+            show.legend = TRUE) +
   labs(title = "Crecimiento promedio de las ventas de productos entre los periodos 2013 a 2017",
-       y = "Ventas") + 
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) + 
+       y = "Ventas") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) +
   scale_color_continuous(name = "Producto", type = "viridis")
 
 #-------------------------------FORECASTING---------------------------------
@@ -383,6 +392,7 @@ ggseasonplot(Ventas_TS,
 # Autocorrelación
 ggAcf(Ventas_TS)
 
+Pacf(Ventas_TS)
 # La autocorrelación es una parte fundamental del analisis exploratorio de los datos
 # permite identificar los patrones y revisar aleatoriedad en los datos.
 # Básicamente es la similitud entre las observaciones en función del desfase temporal
@@ -397,6 +407,9 @@ ggAcf(Ventas_TS)
 # p-valor pequeño -> Rechazar H0 y la serie SÍ es estacionaria
 # p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
 tseries::adf.test(diff(Ventas_TS)) #p-value=0.01, es menor a 0.05, por ende la serie sí es estacionaria
+
+# Descomposición del vector
+autoplot(decompose(Ventas_TS))
 
 # Generamos un pronóstico
 autoplot(forecast(Ventas_TS),
@@ -460,13 +473,6 @@ print(Tienda1_TS)
 # Descomposición de los datos
 autoplot(decompose(Tienda1_TS))
 
-# data:
-# trend:
-# seasonal:
-# remainder:
-
-#
-
 checkresiduals(Tienda1_TS)
 
 autoplot(log(Tienda1_TS))
@@ -491,37 +497,45 @@ tseries::adf.test(diff(Tienda1_TS))
 
 # Aplicamos la función naive
 autoplot(naive(Tienda1_TS, h = 90),
-         main="Pronóstico para los próximos seis meses") +
-  labs(subtitle = "Calculado mediante el método naive")
+         main = "Pronóstico para los próximos tres meses") +
+  labs(subtitle = "Calculado mediante el método naive",
+       x = "Tiempo",
+       y = "Ventas")
 
 # Método naive con estacionalidad
-autoplot(snaive(Tienda1_TS, h = 90),
-         main="Pronóstico para los próximos seis meses") +
-  labs(subtitle = "Calculado mediante el método Snaive")
+autoplot(snaive(Tienda1_TS, h = 90,lambda = 0),
+         main = "Pronóstico para los próximos tres meses") +
+  labs(subtitle = "Calculado mediante el método Snaive",
+       x = "Tiempo",
+       y = "Ventas")
+
 
 # Al ser una serie de tiempo estacionaria, utilizamos la función forecast() la cual
-# nos permite pronosticar utilizando el modelo ETS
+# nos permite buscar el mejor método de pronóstico
 autoplot(
   forecast(Tienda1_TS, h = 365),
-  # Pronosticamos un semestre, es decir 181 días
   xlab = "Fechas",
   ylab = "Ventas",
   main = "Pronóstico del item 1 en la tienda 1"
 ) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10),
-                     labels = Fechas_funcion) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+                     labels = Fechas_funcion) +
+                     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #-------------EJERCICIO 4
 
 Meses_TS <-
-  ts(Meses$Total_de_Ventas, # Indicamos la columna que queremos pronosticar
-     start = 2013,       # Indicamos el año de inicio
+  ts(Meses$Total_de_Ventas,
+     # Indicamos la columna que queremos pronosticar
+     start = 2013,
+     # Indicamos el año de inicio
      frequency = 12)     # Al ser datos mensuales, la frecuencia es 12
 
 print(Meses_TS) # Imprimimos el dataframe creado
 
 # Este es un ploteo que permite destacar los patrones de estacionalidad, dato a dato.
-ggsubseriesplot(Meses_TS) + ylab("Ventas") + xlab("Meses") + ggtitle("Gráfico de subseries estacionales: Ventas mensuales totales") +
+ggsubseriesplot(Meses_TS) + ylab("Ventas") + xlab("Meses") + 
+  ggtitle("Gráfico de subseries estacionales: Ventas mensuales totales") +
   scale_y_continuous(
     breaks = seq(0, 1200000, 100000),
     labels = function(x)
@@ -534,7 +548,7 @@ ggsubseriesplot(Meses_TS) + ylab("Ventas") + xlab("Meses") + ggtitle("Gráfico d
 
 # Aplicamos test de Dickey-Fuller
 # p-valor pequeño -> Rechazar H0 y la serie SÍ es estacionaria
-# p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria 
+# p-valor > 0,05 -> No rechazar H0 y la seríe NO es estacionaria
 tseries::adf.test(Meses_TS)
 
 # Revisamos los datos de manera descompuesta
@@ -555,7 +569,6 @@ autoplot(
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10),
                      labels = Fechas_funcion) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-
 # --------------EJERCICIO 5
 # Creamos un subset con el item 5
 # Usaremos este item porque tiene un evento en particular que rompe con la estacionalidad
@@ -568,31 +581,31 @@ Tienda2 <- train %>% filter(Producto == 5) %>%
 
 # Creamos una serie de tiempo para pronosticar
 Tienda2_TS <- ts(Tienda2$Venta_Semanal,
-                 start=2013,
+                 start = 2013,
                  frequency = 52) # Este es el comando para semanas
 
 # Creamos un pronostico con la función más básica de forecast
-autoplot(forecast(Tienda2_TS),
-         main="Pronóstico de ventas semanales con ETS",
-         xlab="Tiempo",
-         ylab="Ventas semanales") +
+autoplot(forecast(Tienda2_TS, h = 52),
+         main = "Pronóstico de ventas semanales",
+         xlab = "Tiempo",
+         ylab = "Ventas semanales") +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 20),
-                     labels = Fechas_funcion) + 
+                     labels = Fechas_funcion) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_y_continuous(breaks=seq(0,2000,250)) + 
-  labs(subtitle="Corresponde únicamente al producto 5")
+  scale_y_continuous(breaks = seq(0, 2000, 250)) +
+  labs(subtitle = "Corresponde únicamente al producto 5")
 
 # Con snaive, podemos visualizar que el pronostico es diferente, dado que
 # basa los movimientos futuros en relación al último periodo
 autoplot(snaive(Tienda2_TS),
-         main="Pronóstico de ventas semanales con Snaive",
-         xlab="Tiempo",
-         ylab="Ventas semanales") +
+         main = "Pronóstico de ventas semanales con Snaive",
+         xlab = "Tiempo",
+         ylab = "Ventas semanales") +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 20),
-                     labels = Fechas_funcion) + 
+                     labels = Fechas_funcion) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_y_continuous(breaks=seq(0,5000,250)) + 
-  labs(subtitle="Corresponde únicamente al producto 5")
+  scale_y_continuous(breaks = seq(0, 5000, 250)) +
+  labs(subtitle = "Corresponde únicamente al producto 5")
 
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
@@ -600,3 +613,5 @@ gc()
 
 # Limpieza del environment
 rm(list = ls())
+
+
