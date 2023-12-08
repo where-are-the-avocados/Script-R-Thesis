@@ -409,7 +409,7 @@ ggseasonplot(Ventas_TS,
 # Ahora revisamos los datos del dataframe para poder generar un pronóstico
 
 # Autocorrelación
-ggAcf(Ventas_TS) # Mu
+ggAcf(Ventas_TS) 
 
 Pacf(Ventas_TS)
 # La autocorrelación es una parte fundamental del analisis exploratorio de los datos
@@ -727,7 +727,7 @@ autoplot(forecast(Tienda3_TS, h = 4),
 # Dataset a utilizar
 print(Meses)
 
-# creamos una serie de tiempo de la tasa de crecimiento mensual, tomando un
+# Creamos una serie de tiempo de la tasa de crecimiento mensual, tomando un
 # corte desde enero del año 2013 hasta diciembre del año 2015
 Tasas_Mes_TS <- ts(
   Meses$Tasa,
@@ -748,7 +748,8 @@ autoplot(decompose(Tasas_Mes_TS))
 # forecast.
 autoplot(forecast(auto.arima(Tasas_Mes_TS)))
 
-# Comparamos la predicción con los datos actuales, para ello extraemos lo restante del dataset
+# Comparamos la predicción con los datos actuales, para ello 
+# extraemos lo restante del dataset
 Tasas_Mes2016 <- Meses[Meses$Mes >= "2016-01-01", ]
 
 # Revisamos el objeto nuevo
@@ -762,8 +763,7 @@ Tasas_Mes2016_2 <-
   summarise(Total_de_Ventas = sum(Total_de_Ventas))
 
 # Creamos una columna con la tasa de crecimiento
-Tasas_Mes2016_2$Tasa = c(0,
-                         100 * diff(Tasas_Mes2016_2$Total_de_Ventas) / Tasas_Mes2016_2[-nrow(Tasas_Mes2016_2),]$Total_de_Ventas)
+Tasas_Mes2016_2$Tasa = c(0, 100 * diff(Tasas_Mes2016_2$Total_de_Ventas) / Tasas_Mes2016_2[-nrow(Tasas_Mes2016_2),]$Total_de_Ventas)
 
 # La imprimimos
 print(Tasas_Mes2016_2)
@@ -784,6 +784,17 @@ print(Tasas_Mes_TS)
 # 2013 hasta el año 2015
 autoplot(forecast(auto.arima(Tasas_Mes_TS)))
 
+gglagplot(Tasas_Mes_TS)
+
+# Esta función permite identificar si un objeto es un forecast o no
+is.forecast(Tasas_Mes_TS) # Arroja falso
+
+# Función Acf
+Acf(Tasas_Mes_TS)
+
+# Esta función permite ver cuantos dias tiene cada mes de la serie de tiempo 
+monthdays(Tasas_Mes_TS)
+
 # Superponemos los datos reales versus el pronóstico
 autoplot(forecast(auto.arima(Tasas_Mes_TS))) +
   autolayer(Tasas_Mes_TS_2) +
@@ -798,6 +809,42 @@ autoplot(forecast(auto.arima(Tasas_Mes_TS))) +
     labels = function(x)
       paste0(x, "%")
   ) + theme(legend.position = "none")
+
+
+# ------------------------FUNCIONES EXTRA
+
+# Muestra el rango y mediana de cada mes
+ggmonthplot(Tienda2_TS)
+
+# 
+ggtsdisplay(Tienda3_TS)
+
+# Genera histograma de la serie temporal
+gghistogram(Tasas_Mes_TS_2)
+
+# Distribución de los meses según orden
+monthdays(Meses_TS)
+
+# Otro ejemplo según orden
+monthdays(TasaMensual_TS)
+
+# Entrega información sobre la media
+meanf(TasaMensual_TS)
+
+#  Entrega información en texto del dato, la tendencia la estacionalidad y el desecho
+mstl(TasaMensual_TS)
+
+#  Aplica test de ocsb
+ocsb.test(Meses_TS)
+
+# Devuelve una matriz con variables de prueba
+seasonaldummy(Tienda1_TS)
+
+# Devuelve si un objeto es acf
+is.acf(TasaMensual_TS)
+
+# Permite generar plots de forecast, da el mismo resultado que la función autoplot()
+geom_forecast()
 
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
