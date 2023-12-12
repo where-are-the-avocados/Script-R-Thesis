@@ -1,18 +1,13 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
-install.packages("tidyverse",
-                 # Trae todas las herramientas necesarias para modificar datos y hacer gráficos
-                 "lubridate",
-                 #                  # Permite trabajar con fechas
-                 "forecast",
-                 #                  # Permite hacer pronósticos
-                 "readxl",
-                 #                  # Funciones para cargar archivos
-                 "summarytools",
-                 #                  # Estadística descriptiva
-                 "zoo")          # Herrramientas para modificar fechas, similar a lubridate
-#
-update.packages()
+install.packages("tidyverse", # Paquete para hacer y manipular graficos y datos
+                 "lubridate", # Permite trabajar con fechas
+                 "forecast",  # Permite hacer pronósticos
+                 "readxl",     # Funciones para cargar archivos
+                 "summarytools",  # Estadística descriptiva
+                 "zoo")    # Herrramientas para modificar fechas
 
+update.packages()
+install.packages("lmtest")
 #--------------------REVISIÓN DE SESIÓN DE RSTUDIO------------------------------
 sessionInfo()
 
@@ -153,7 +148,7 @@ ggplot(train, aes(x = Ventas)) +
   geom_histogram(col = "black",
                  fill = "steelblue",
                  bins = 30) +
-  ggtitle("Histograma de Precios de Venta") + xlab("Ventas") + ylab("Frecuencia") +
+  ggtitle("Histograma de Ventas") + xlab("Ventas") + ylab("Frecuencia") +
   scale_x_continuous(breaks = seq(0, 300, 10)) +
   scale_y_continuous(
     breaks = seq(0, 120000, 10000),
@@ -198,7 +193,7 @@ print(Sum_fecha)
 # Creamos un gráfico que nos muestre la nueva columna creada
 ggplot(Sum_fecha, aes(x = Fechas, y = Tasa)) +
   geom_point(aes(group = 1), size = 1) +
-  geom_smooth(method = "lm") + ggtitle("Tasa de crecimiento del Precio de Venta",
+  geom_smooth(method = "lm") + ggtitle("Tasa de crecimiento de las ventas",
                                        subtitle = "Implica la diferencia entre el total de ventas del día, con su antecesor inmediato") +
   xlab("Fechas") + ylab("Tasas") +
   geom_hline(yintercept = 0)  +
@@ -223,7 +218,7 @@ ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
   labs(
     title = "Crecimiento mes a mes de las ventas",
     x = "Fechas",
-    y = "Precio de Venta",
+    y = "Ventas",
     subtitle = "Comprende el lapso entre el 2013 al 2017"
   ) +
   scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") +
@@ -283,7 +278,7 @@ print(Años)
 
 # Creamos un gráfico que nos muestre la tasa de crecimiento de las ventas, año a año
 ggplot(Años, aes(x = Año, y = Tasa)) +
-  geom_line() + ggtitle("Tasa de crecimiento del precio de venta") +
+  geom_line() + ggtitle("Tasa de crecimiento de las ventas") +
   xlab("Fechas") + ylab("Tasas") +
   geom_point() + scale_x_date(date_labels = "%Y", date_breaks = "years") +
   scale_y_continuous(
@@ -810,7 +805,11 @@ autoplot(forecast(auto.arima(Tasas_Mes_TS))) +
       paste0(x, "%")
   ) + theme(legend.position = "none")
 
-
+barraA=ggplot(Anolis, aes(SEX_AGE, fill=SEASON))
+barraA+geom_bar()+  
+  facet_wrap(~Survey_Site)+
+  labs(y="Frecuencia", x="Género y edad")+
+  theme(axis.title=element_text(size=10,face="bold"))
 # ------------------------FUNCIONES EXTRA
 
 # Muestra el rango y mediana de cada mes
@@ -829,7 +828,8 @@ monthdays(Meses_TS)
 monthdays(TasaMensual_TS)
 
 # Entrega información sobre la media
-meanf(TasaMensual_TS)
+meanf(Meses_TS)
+autoplot(meanf(Meses_TS))
 
 #  Entrega información en texto del dato, la tendencia la estacionalidad y el desecho
 mstl(TasaMensual_TS)
@@ -845,6 +845,67 @@ is.acf(TasaMensual_TS)
 
 # Permite generar plots de forecast, da el mismo resultado que la función autoplot()
 geom_forecast()
+
+# Random walk forecast
+rwf(Meses_TS)
+autoplot(rwf(Meses_TS))
+
+# ¿Es forecast?
+Objeto <- forecast(Ventas_TS)
+is.forecast(Objeto)
+
+# Devuelve el periodo de la frecuencia dominante de una serie temporal. 
+# Para datos estacionales el período estacional. 
+# Para datos cíclicos, devuelve la longitud media del ciclo.
+findfrequency(Ventas_TS)
+
+# -------------------------------------MISC-------------------------------------
+install.packages("ghibli")
+library(ghibli)
+
+Productos <- train %>% group_by(Tienda) %>% 
+  arrange(Tienda) 
+
+print(Productos)
+
+ggplot(Productos, aes(x=Tienda,
+                      y=Ventas,
+                      group=Tienda,
+                      fill=Tienda)) + 
+  geom_boxplot() + labs(title="Comparación de ventas por tienda",
+                        subtitle="Aplicando gráfico de caja y bigote") +
+  scale_x_continuous(breaks=seq(0, 10, 1)) + theme(legend.position = "none") +
+  scale_fill_ghibli_c("PonyoMedium")
+
+autoplot(stl(Meses_TS, s.window = 'periodic'), ts.colour = 'red')
+
+# Descomposición de la serie de tiempo. Se almacena en el objeto fit
+fit <- decompose(Meses_TS, type='additive')
+
+# Lo graficamos
+autoplot(fit) + theme_bw()
+
+# Utilizamos la función autolayer()
+autoplot(Meses_TS, series="Serie tiempo") + 
+  autolayer(trendcycle(fit), series="Tendencia") +
+  labs(title = "Evolución de las ventas mensuales con tendencia",      
+       x = "Tiempo",
+       y = "Ventas",
+       subtitle="Incorpora los datos reales con la tendencia, obtenida a través de la función decompose()") + 
+  theme_minimal() + scale_y_continuous(
+    labels = function(x)
+      format(x, big.mark = ".", scientific = FALSE))
+
+# Serie temporal con ajuste estacional
+autoplot(Meses_TS, series="Serie temporal") + 
+  autolayer(seasadj(fit), series="Estacionalidad ajustada") +
+  labs(title = "Evolución de las ventas mensuales con tendencia",      
+       x = "Tiempo",
+       y = "Ventas",
+       subtitle="Incorpora los datos reales con la estacionalidad ajustada, obtenida a través de la función decompose()") + 
+  theme_minimal() + scale_y_continuous(
+    labels = function(x)
+      format(x, big.mark = ".", scientific = FALSE))
 
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
