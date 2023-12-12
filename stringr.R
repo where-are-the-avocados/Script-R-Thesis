@@ -1,7 +1,7 @@
 library(tidyverse)
 
 library(readr)
-vgsales <- read_csv("Dataset/stringr/vgsales.csv")
+vgsales <- read_csv("E:/Universidad/Tesis/vgsales.csv")
 View(vgsales)
 
 colSums(is.na(vgsales))             # No tiene valores NA
