@@ -907,6 +907,13 @@ autoplot(Meses_TS, series="Serie temporal") +
     labels = function(x)
       format(x, big.mark = ".", scientific = FALSE))
 
+# Función para determinar si es ACF
+is.acf(Acf(Meses_TS))
+
+# Medición de precisión de los pronósticos
+accuracy(ets(Meses_TS))
+accuracy(auto.arima(Meses_TS))
+
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
 gc()
