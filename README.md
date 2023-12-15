@@ -2,7 +2,7 @@
 
 ## Objetivo General
 
-Identificar la pertinencia que tiene el paquete forecast para ser aplicado en el área de la auditoría, a través de un estudio de caso aplicado a la contabilidad de una entidad.
+Identificar la pertinencia y aplicabilidad que tiene el paquete forecast para ser aplicado en el área de la auditoría, a través de un estudio de caso aplicado a la contabilidad de una entidad.
 
 ## Objetivos Específicos
 
@@ -20,7 +20,9 @@ Para efectos de esta investigación, se utilizó RStudio con las siguientes libr
  install.packages("tidyverse",
                  "lubridate",
                  "forecast",
-                 "readxl")
+                 "readxl",
+                 "zoo",
+                 "ghibli")
 
  update.packages()
 
@@ -29,4 +31,6 @@ Para efectos de esta investigación, se utilizó RStudio con las siguientes libr
     library(lubridate)
     library(forecast)
     library(readxl)
+    library(zoo)
+    library(ghibli)
 ```
