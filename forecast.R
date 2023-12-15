@@ -154,8 +154,9 @@ ggplot(train, aes(x = Ventas)) +
     breaks = seq(0, 120000, 10000),
     labels = function(x)
       format(x, big.mark = ".", scientific = FALSE)
-  )
-
+  ) +
+  scale_fill_ghibli_c("PonyoMedium")
+ 
 # Creamos un objeto que nos muestre las ventas totales por día
 Sum_fecha <-  select(train, Ventas, Fechas) %>%
   group_by(Fechas) %>%
@@ -202,8 +203,8 @@ ggplot(Sum_fecha, aes(x = Fechas, y = Tasa)) +
     labels = function(x)
       paste0(x, "%")
   ) +
-  scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+  scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 # Creamos un vector que nos muestre las ventas totales por mes
 Meses <-  select(train, Ventas, Fechas) %>%
@@ -226,18 +227,18 @@ ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
     breaks = seq(450000, 1500000, 100000),
     labels = function(x)
       format(x, big.mark = ".", scientific = FALSE)
-  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 # Creamos un vector que nos muestre la tasa de crecimiento por fecha
 Meses$Tasa = c(0, 100 * diff(Meses$Total_de_Ventas) / Meses[-nrow(Meses),]$Total_de_Ventas)
 
 ggplot(Meses, aes(x = Mes, y = Tasa)) +
-  geom_line(aes(group = 1), color = "darkred") + ggtitle("Tasa de crecimiento mensual de las ventas",
+  geom_line(aes(group = 1), color = "#ae93be") + ggtitle("Tasa de crecimiento mensual de las ventas",
                                                          subtitle = "Implica la diferencia entre el total de ventas del mes, con su antecesor inmediato") +
   xlab("Fechas") + ylab("Tasas") +
   geom_hline(
     yintercept = 0,
-    col = "darkblue",
+    col = "#00afaf",
     size = 1,
     linetype = "dotted"
   ) + scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") +
@@ -348,7 +349,7 @@ ggplot(Tienda_Dataset, aes(x = Año, y = Ventas, group = Tienda)) +
             show.legend = TRUE) +
   labs(title = "Crecimiento promedio de las tiendas entre los años 2013 a 2017",
        y = "Ventas") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion)
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) 
 
 # Ventas por item
 unique(train$Producto)
@@ -369,8 +370,7 @@ ggplot(Productos_Dataset, aes(group = Producto)) +
             show.legend = TRUE) +
   labs(title = "Crecimiento de las ventas de productos entre el periodos 2013 - 2017",
        y = "Ventas") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion)
-
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) 
 #-------------------------------FORECASTING---------------------------------
 
 # Para llevar a cabo la aplicación de forecast, utilizaremos los vectores
