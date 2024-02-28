@@ -14,7 +14,7 @@ To identify the relevance and applicability of the forecast package to be applie
 ## Resources used
 
 For the purposes of this particular research, RStudio was used with the following libraries:
-Most of explanations are included in the code, but in spanish since it is my native language.
+Most of explanations are included in the code, however they are in spanish. Henceforth, everything is in my native language.
 ```
 # Instalación paquetes
  install.packages("tidyverse",
