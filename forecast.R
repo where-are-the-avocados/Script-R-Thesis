@@ -1,13 +1,14 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
-install.packages("tidyverse", # Paquete para hacer y manipular graficos y datos
-                 "lubridate", # Permite trabajar con fechas
-                 "forecast",  # Permite hacer pronósticos
-                 "readxl",     # Funciones para cargar archivos
-                 "summarytools",  # Estadística descriptiva
-                 "zoo")    # Herrramientas para modificar fechas
 
-update.packages()
-install.packages("lmtest")
+# install.packages("tidyverse", # Paquete para hacer y manipular graficos y datos
+                 # "lubridate", # Permite trabajar con fechas
+                 # "forecast",  # Permite hacer pronósticos
+                 # "readxl",     # Funciones para cargar archivos
+                 # "summarytools",  # Estadística descriptiva
+                 # "zoo")    # Herrramientas para modificar fechas
+
+# update.packages()
+
 #--------------------REVISIÓN DE SESIÓN DE RSTUDIO------------------------------
 sessionInfo()
 
@@ -25,7 +26,7 @@ library(lubridate)
 library(forecast)
 library(summarytools)
 library(zoo)
-
+library(ghibli)
 #-----------------DESARROLLO DEL CÓDIGO PARA LA INVESTIGACIÓN-------------------
 # Importación de los Datasets
 library(readr)
@@ -141,6 +142,27 @@ Fechas_funcion <- function(x) {
   format(date_decimal(x), "%b-%Y")
 }
 
+# Creamos otra forma para representar las fechas de otro modo
+
+Fechas_funcion_2 <- function(x) {
+  format(date_decimal(x), "%Y-%m-%d")
+}
+
+# En caso de necesitar otra forma, simplemente crear otra función y cambiar el formato
+# y retirar los #
+
+# Fechas_funcion_2 <- function(x) {                 
+# format(date_decimal(x), "[INSERTAR ACA]")
+# }
+
+# Creamos otra función que nos permite añadir un "." como separador de miles
+# en los gráficos que se crearán a futuro. También es posible añadir el mismo 
+# código de la función, no obstante, usarla ahorra espacio y mejora la aplicabilidad.
+
+separadores_funcion = function(x) {
+  format(x, big.mark = ".", scientific = FALSE)
+}
+
 #----------------------------ANÁLISIS DE LOS DATASETS---------------------------#
 
 # Histograma de las ventas, distribuidas por su frecuencia
@@ -153,10 +175,14 @@ ggplot(train, aes(x = Ventas)) +
   scale_y_continuous(
     breaks = seq(0, 120000, 10000),
     labels = function(x)
-      format(x, big.mark = ".", scientific = FALSE)
-  ) +
-  scale_fill_ghibli_c("PonyoMedium")
- 
+      format(x, big.mark = ".", scientific = FALSE)) 
+
+# Gráfico de línea de las ventas, [ESTE GRÁFICO TARDA MUCHO EN CARGAR]
+ggplot(train, aes(y = Ventas, x = Fechas)) +
+  geom_line() +
+  ggtitle("Ventas") + 
+  scale_y_continuous(breaks = seq(0, 300, 10))
+
 # Creamos un objeto que nos muestre las ventas totales por día
 Sum_fecha <-  select(train, Ventas, Fechas) %>%
   group_by(Fechas) %>%
@@ -165,7 +191,7 @@ Sum_fecha <-  select(train, Ventas, Fechas) %>%
 # Imprimimos el vector para revisarlo
 print(Sum_fecha)
 
-# Convertimos la columnda date a <date>
+# Convertimos la columna date a <date>
 Sum_fecha$date <- as.Date(Sum_fecha$Fechas, format = "%Y-%m-%d")
 
 # Imprimimos para confirmar que funcionó
@@ -805,11 +831,6 @@ autoplot(forecast(auto.arima(Tasas_Mes_TS))) +
       paste0(x, "%")
   ) + theme(legend.position = "none")
 
-barraA=ggplot(Anolis, aes(SEX_AGE, fill=SEASON))
-barraA+geom_bar()+  
-  facet_wrap(~Survey_Site)+
-  labs(y="Frecuencia", x="Género y edad")+
-  theme(axis.title=element_text(size=10,face="bold"))
 # ------------------------FUNCIONES EXTRA
 
 # Muestra el rango y mediana de cada mes
@@ -893,8 +914,7 @@ autoplot(Meses_TS, series="Serie tiempo") +
        y = "Ventas",
        subtitle="Incorpora los datos reales con la tendencia, obtenida a través de la función decompose()") + 
   theme_minimal() + scale_y_continuous(
-    labels = function(x)
-      format(x, big.mark = ".", scientific = FALSE))
+    labels = separadores_funcion)
 
 # Serie temporal con ajuste estacional
 autoplot(Meses_TS, series="Serie temporal") + 
@@ -904,8 +924,7 @@ autoplot(Meses_TS, series="Serie temporal") +
        y = "Ventas",
        subtitle="Incorpora los datos reales con la estacionalidad ajustada, obtenida a través de la función decompose()") + 
   theme_minimal() + scale_y_continuous(
-    labels = function(x)
-      format(x, big.mark = ".", scientific = FALSE))
+    labels = separadores_funcion)
 
 # Función para determinar si es ACF
 is.acf(Acf(Meses_TS))
@@ -913,10 +932,73 @@ is.acf(Acf(Meses_TS))
 # Medición de precisión de los pronósticos
 accuracy(ets(Meses_TS))
 accuracy(auto.arima(Meses_TS))
+#---------------------------------TESTEO DE LOS DATOS---------------------------
+# Esta es una segunda oportunidad donde el usuario puede medir la factibilidad
+# de los pronósticos en base a los datos de test. Que son los próximos periodos 
+# en cuestión.
+View(test)
+
+# Funciones que permiten identificar la estructura del Dataset
+head(test)
+tail(test)
+structure(test)
+glimpse(test)
+str(test)
+dim(test)
+nrow(test)
+ncol(test)
+ls(test)
+names(test)
+summary(test)
+glimpse(summary(test))
+names(test)
+
+# Reutilizamos el forecast previo para conocer el pronóstico de los siguientes 
+# tres meses en adelante, vale decir, enero, febrero y marzo del año 2018.
+
+# Guardamos el ejemplo del forecast como un objeto, dado que trabajaramos con 
+# él más adelante
+
+forecast_ejemplo <-  forecast(Ventas_TS, h=90)
+print(forecast_ejemplo)
+
+sales_meanf <- meanf(Ventas_TS, h=90)
+print(sales_meanf)
+
+sales_rwf <- rwf(Ventas_TS, h=90)
+print(sales_rwf)
+
+sales_snaive <- snaive(Ventas_TS, h=90)
+print(sales_rwf)
+
+# Aplicamos la prueba de test para corroborar que efectivamente existe un 
+# forecasting debidamente aplicado a los datos.
+
+autoplot(forecast_ejemplo) +
+  autolayer(sales_meanf, series = "Media", PI = FALSE) +
+  autolayer(sales_rwf, series = "Naive", PI = FALSE) +
+  autolayer(sales_snaive, series ="Snaive", PI = FALSE) +
+  labs(x="Tiempo",
+       y="Ventas")  +
+  guides(colour=guide_legend(title=" "))  +
+  scale_y_continuous(
+    breaks = seq(0, 50000, 5000),
+    labels = separadores_funcion) 
+
+# Medimos la precisión del pronóstico
+accuracy(sales_meanf)
+accuracy(sales_rwf)
+accuracy(sales_snaive)
+
+# MUESTRA 2
+
+print(sample_submission)
+print(test)
 
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
 gc()
 
 # Limpieza del environment
-rm(list = ls())
+# rm(list = ls())
+
