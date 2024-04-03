@@ -1,11 +1,11 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
 
 # install.packages("tidyverse", # Paquete para hacer y manipular graficos y datos
-                 # "lubridate", # Permite trabajar con fechas
-                 # "forecast",  # Permite hacer pronósticos
-                 # "readxl",     # Funciones para cargar archivos
-                 # "summarytools",  # Estadística descriptiva
-                 # "zoo")    # Herrramientas para modificar fechas
+# "lubridate", # Permite trabajar con fechas
+# "forecast",  # Permite hacer pronósticos
+# "readxl",     # Funciones para cargar archivos
+# "summarytools",  # Estadística descriptiva
+# "zoo")    # Herrramientas para modificar fechas
 
 # update.packages()
 
@@ -151,12 +151,12 @@ Fechas_funcion_2 <- function(x) {
 # En caso de necesitar otra forma, simplemente crear otra función y cambiar el formato
 # y retirar los #
 
-# Fechas_funcion_2 <- function(x) {                 
+# Fechas_funcion_2 <- function(x) {
 # format(date_decimal(x), "[INSERTAR ACA]")
 # }
 
 # Creamos otra función que nos permite añadir un "." como separador de miles
-# en los gráficos que se crearán a futuro. También es posible añadir el mismo 
+# en los gráficos que se crearán a futuro. También es posible añadir el mismo
 # código de la función, no obstante, usarla ahorra espacio y mejora la aplicabilidad.
 
 separadores_funcion = function(x) {
@@ -175,12 +175,13 @@ ggplot(train, aes(x = Ventas)) +
   scale_y_continuous(
     breaks = seq(0, 120000, 10000),
     labels = function(x)
-      format(x, big.mark = ".", scientific = FALSE)) 
+      format(x, big.mark = ".", scientific = FALSE)
+  )
 
 # Gráfico de línea de las ventas, [ESTE GRÁFICO TARDA MUCHO EN CARGAR]
 ggplot(train, aes(y = Ventas, x = Fechas)) +
   geom_line() +
-  ggtitle("Ventas") + 
+  ggtitle("Ventas") +
   scale_y_continuous(breaks = seq(0, 300, 10))
 
 # Creamos un objeto que nos muestre las ventas totales por día
@@ -229,8 +230,8 @@ ggplot(Sum_fecha, aes(x = Fechas, y = Tasa)) +
     labels = function(x)
       paste0(x, "%")
   ) +
-  scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Creamos un vector que nos muestre las ventas totales por mes
 Meses <-  select(train, Ventas, Fechas) %>%
@@ -253,7 +254,7 @@ ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
     breaks = seq(450000, 1500000, 100000),
     labels = function(x)
       format(x, big.mark = ".", scientific = FALSE)
-  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Creamos un vector que nos muestre la tasa de crecimiento por fecha
 Meses$Tasa = c(0, 100 * diff(Meses$Total_de_Ventas) / Meses[-nrow(Meses),]$Total_de_Ventas)
@@ -375,7 +376,7 @@ ggplot(Tienda_Dataset, aes(x = Año, y = Ventas, group = Tienda)) +
             show.legend = TRUE) +
   labs(title = "Crecimiento promedio de las tiendas entre los años 2013 a 2017",
        y = "Ventas") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion)
 
 # Ventas por item
 unique(train$Producto)
@@ -396,7 +397,7 @@ ggplot(Productos_Dataset, aes(group = Producto)) +
             show.legend = TRUE) +
   labs(title = "Crecimiento de las ventas de productos entre el periodos 2013 - 2017",
        y = "Ventas") +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion) 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = Fechas_funcion)
 #-------------------------------FORECASTING---------------------------------
 
 # Para llevar a cabo la aplicación de forecast, utilizaremos los vectores
@@ -430,7 +431,7 @@ ggseasonplot(Ventas_TS,
 # Ahora revisamos los datos del dataframe para poder generar un pronóstico
 
 # Autocorrelación
-ggAcf(Ventas_TS) 
+ggAcf(Ventas_TS)
 
 Pacf(Ventas_TS)
 # La autocorrelación es una parte fundamental del analisis exploratorio de los datos
@@ -769,7 +770,7 @@ autoplot(decompose(Tasas_Mes_TS))
 # forecast.
 autoplot(forecast(auto.arima(Tasas_Mes_TS)))
 
-# Comparamos la predicción con los datos actuales, para ello 
+# Comparamos la predicción con los datos actuales, para ello
 # extraemos lo restante del dataset
 Tasas_Mes2016 <- Meses[Meses$Mes >= "2016-01-01", ]
 
@@ -784,7 +785,8 @@ Tasas_Mes2016_2 <-
   summarise(Total_de_Ventas = sum(Total_de_Ventas))
 
 # Creamos una columna con la tasa de crecimiento
-Tasas_Mes2016_2$Tasa = c(0, 100 * diff(Tasas_Mes2016_2$Total_de_Ventas) / Tasas_Mes2016_2[-nrow(Tasas_Mes2016_2),]$Total_de_Ventas)
+Tasas_Mes2016_2$Tasa = c(0,
+                         100 * diff(Tasas_Mes2016_2$Total_de_Ventas) / Tasas_Mes2016_2[-nrow(Tasas_Mes2016_2),]$Total_de_Ventas)
 
 # La imprimimos
 print(Tasas_Mes2016_2)
@@ -813,7 +815,7 @@ is.forecast(Tasas_Mes_TS) # Arroja falso
 # Función Acf
 Acf(Tasas_Mes_TS)
 
-# Esta función permite ver cuantos dias tiene cada mes de la serie de tiempo 
+# Esta función permite ver cuantos dias tiene cada mes de la serie de tiempo
 monthdays(Tasas_Mes_TS)
 
 # Superponemos los datos reales versus el pronóstico
@@ -836,7 +838,7 @@ autoplot(forecast(auto.arima(Tasas_Mes_TS))) +
 # Muestra el rango y mediana de cada mes
 ggmonthplot(Tienda2_TS)
 
-# 
+#
 ggtsdisplay(Tienda3_TS)
 
 # Genera histograma de la serie temporal
@@ -875,8 +877,8 @@ autoplot(rwf(Meses_TS))
 Objeto <- forecast(Ventas_TS)
 is.forecast(Objeto)
 
-# Devuelve el periodo de la frecuencia dominante de una serie temporal. 
-# Para datos estacionales el período estacional. 
+# Devuelve el periodo de la frecuencia dominante de una serie temporal.
+# Para datos estacionales el período estacional.
 # Para datos cíclicos, devuelve la longitud media del ciclo.
 findfrequency(Ventas_TS)
 
@@ -884,47 +886,51 @@ findfrequency(Ventas_TS)
 install.packages("ghibli")
 library(ghibli)
 
-Productos <- train %>% group_by(Tienda) %>% 
-  arrange(Tienda) 
+Productos <- train %>% group_by(Tienda) %>%
+  arrange(Tienda)
 
 print(Productos)
 
-ggplot(Productos, aes(x=Tienda,
-                      y=Ventas,
-                      group=Tienda,
-                      fill=Tienda)) + 
-  geom_boxplot() + labs(title="Comparación de ventas por tienda",
-                        subtitle="Aplicando gráfico de caja y bigote") +
-  scale_x_continuous(breaks=seq(0, 10, 1)) + theme(legend.position = "none") +
+ggplot(Productos, aes(
+  x = Tienda,
+  y = Ventas,
+  group = Tienda,
+  fill = Tienda
+)) +
+  geom_boxplot() + labs(title = "Comparación de ventas por tienda",
+                        subtitle = "Aplicando gráfico de caja y bigote") +
+  scale_x_continuous(breaks = seq(0, 10, 1)) + theme(legend.position = "none") +
   scale_fill_ghibli_c("PonyoMedium")
 
 autoplot(stl(Meses_TS, s.window = 'periodic'), ts.colour = 'red')
 
 # Descomposición de la serie de tiempo. Se almacena en el objeto fit
-fit <- decompose(Meses_TS, type='additive')
+fit <- decompose(Meses_TS, type = 'additive')
 
 # Lo graficamos
 autoplot(fit) + theme_bw()
 
 # Utilizamos la función autolayer()
-autoplot(Meses_TS, series="Serie tiempo") + 
-  autolayer(trendcycle(fit), series="Tendencia") +
-  labs(title = "Evolución de las ventas mensuales con tendencia",      
-       x = "Tiempo",
-       y = "Ventas",
-       subtitle="Incorpora los datos reales con la tendencia, obtenida a través de la función decompose()") + 
-  theme_minimal() + scale_y_continuous(
-    labels = separadores_funcion)
+autoplot(Meses_TS, series = "Serie tiempo") +
+  autolayer(trendcycle(fit), series = "Tendencia") +
+  labs(
+    title = "Evolución de las ventas mensuales con tendencia",
+    x = "Tiempo",
+    y = "Ventas",
+    subtitle = "Incorpora los datos reales con la tendencia, obtenida a través de la función decompose()"
+  ) +
+  theme_minimal() + scale_y_continuous(labels = separadores_funcion)
 
 # Serie temporal con ajuste estacional
-autoplot(Meses_TS, series="Serie temporal") + 
-  autolayer(seasadj(fit), series="Estacionalidad ajustada") +
-  labs(title = "Evolución de las ventas mensuales con tendencia",      
-       x = "Tiempo",
-       y = "Ventas",
-       subtitle="Incorpora los datos reales con la estacionalidad ajustada, obtenida a través de la función decompose()") + 
-  theme_minimal() + scale_y_continuous(
-    labels = separadores_funcion)
+autoplot(Meses_TS, series = "Serie temporal") +
+  autolayer(seasadj(fit), series = "Estacionalidad ajustada") +
+  labs(
+    title = "Evolución de las ventas mensuales con tendencia",
+    x = "Tiempo",
+    y = "Ventas",
+    subtitle = "Incorpora los datos reales con la estacionalidad ajustada, obtenida a través de la función decompose()"
+  ) +
+  theme_minimal() + scale_y_continuous(labels = separadores_funcion)
 
 # Función para determinar si es ACF
 is.acf(Acf(Meses_TS))
@@ -934,7 +940,7 @@ accuracy(ets(Meses_TS))
 accuracy(auto.arima(Meses_TS))
 #---------------------------------TESTEO DE LOS DATOS---------------------------
 # Esta es una segunda oportunidad donde el usuario puede medir la factibilidad
-# de los pronósticos en base a los datos de test. Que son los próximos periodos 
+# de los pronósticos en base a los datos de test. Que son los próximos periodos
 # en cuestión.
 View(test)
 
@@ -953,37 +959,36 @@ summary(test)
 glimpse(summary(test))
 names(test)
 
-# Reutilizamos el forecast previo para conocer el pronóstico de los siguientes 
+# Reutilizamos el forecast previo para conocer el pronóstico de los siguientes
 # tres meses en adelante, vale decir, enero, febrero y marzo del año 2018.
 
-# Guardamos el ejemplo del forecast como un objeto, dado que trabajaramos con 
+# Guardamos el ejemplo del forecast como un objeto, dado que trabajaramos con
 # él más adelante
 
-forecast_ejemplo <-  forecast(Ventas_TS, h=90)
+forecast_ejemplo <-  forecast(Ventas_TS, h = 90)
 print(forecast_ejemplo)
 
-sales_meanf <- meanf(Ventas_TS, h=90)
+sales_meanf <- meanf(Ventas_TS, h = 90)
 print(sales_meanf)
 
-sales_rwf <- rwf(Ventas_TS, h=90)
+sales_rwf <- rwf(Ventas_TS, h = 90)
 print(sales_rwf)
 
-sales_snaive <- snaive(Ventas_TS, h=90)
+sales_snaive <- snaive(Ventas_TS, h = 90)
 print(sales_rwf)
 
-# Aplicamos la prueba de test para corroborar que efectivamente existe un 
+# Aplicamos la prueba de test para corroborar que efectivamente existe un
 # forecasting debidamente aplicado a los datos.
 
 autoplot(forecast_ejemplo) +
   autolayer(sales_meanf, series = "Media", PI = FALSE) +
   autolayer(sales_rwf, series = "Naive", PI = FALSE) +
-  autolayer(sales_snaive, series ="Snaive", PI = FALSE) +
-  labs(x="Tiempo",
-       y="Ventas")  +
-  guides(colour=guide_legend(title=" "))  +
-  scale_y_continuous(
-    breaks = seq(0, 50000, 5000),
-    labels = separadores_funcion) 
+  autolayer(sales_snaive, series = "Snaive", PI = FALSE) +
+  labs(x = "Tiempo",
+       y = "Ventas")  +
+  guides(colour = guide_legend(title = " "))  +
+  scale_y_continuous(breaks = seq(0, 50000, 5000),
+                     labels = separadores_funcion)
 
 # Medimos la precisión del pronóstico
 accuracy(sales_meanf)
@@ -1001,4 +1006,3 @@ gc()
 
 # Limpieza del environment
 # rm(list = ls())
-
