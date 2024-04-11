@@ -1,13 +1,15 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
 
-# install.packages("tidyverse", # Paquete para hacer y manipular graficos y datos
-# "lubridate", # Permite trabajar con fechas
-# "forecast",  # Permite hacer pronósticos
-# "readxl",     # Funciones para cargar archivos
-# "summarytools",  # Estadística descriptiva
-# "zoo")    # Herrramientas para modificar fechas
+ install.packages("tidyverse", # Paquete para hacer y manipular gráficos y datos
+                   "lubridate", # Permite trabajar con fechas
+                   "forecast",  # Permite hacer pronósticos
+                   "readxl",     # Funciones para cargar archivos
+                   "summarytools",  # Estadística descriptiva
+                   "zoo",     # Herramientas para modificar fechas
+                   "ghibli")  # Estética  
 
-# update.packages()
+# Actualizar paquetes a la última versión
+update.packages(forecast)
 
 #--------------------REVISIÓN DE SESIÓN DE RSTUDIO------------------------------
 sessionInfo()
@@ -27,6 +29,7 @@ library(forecast)
 library(summarytools)
 library(zoo)
 library(ghibli)
+
 #-----------------DESARROLLO DEL CÓDIGO PARA LA INVESTIGACIÓN-------------------
 # Importación de los Datasets
 library(readr)
@@ -179,10 +182,10 @@ ggplot(train, aes(x = Ventas)) +
   )
 
 # Gráfico de línea de las ventas, [ESTE GRÁFICO TARDA MUCHO EN CARGAR]
-ggplot(train, aes(y = Ventas, x = Fechas)) +
-  geom_line() +
-  ggtitle("Ventas") +
-  scale_y_continuous(breaks = seq(0, 300, 10))
+# ggplot(train, aes(y = Ventas, x = Fechas)) +
+#   geom_line() +
+#   ggtitle("Ventas") +
+#   scale_y_continuous(breaks = seq(0, 300, 10))
 
 # Creamos un objeto que nos muestre las ventas totales por día
 Sum_fecha <-  select(train, Ventas, Fechas) %>%
@@ -242,7 +245,7 @@ print(Meses)
 
 # Creamos un gráfico que nos muestra el crecimiento de las ventas por fechas
 ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
-  geom_line() +
+  geom_line(col="darkred") +
   labs(
     title = "Crecimiento mes a mes de las ventas",
     x = "Fechas",
@@ -260,12 +263,13 @@ ggplot(Meses, aes(x = Mes, y = Total_de_Ventas)) +
 Meses$Tasa = c(0, 100 * diff(Meses$Total_de_Ventas) / Meses[-nrow(Meses),]$Total_de_Ventas)
 
 ggplot(Meses, aes(x = Mes, y = Tasa)) +
-  geom_line(aes(group = 1), color = "#ae93be") + ggtitle("Tasa de crecimiento mensual de las ventas",
-                                                         subtitle = "Implica la diferencia entre el total de ventas del mes, con su antecesor inmediato") +
+  geom_line(aes(group = 1), color = "#ea7600") + 
+  ggtitle("Tasa de crecimiento mensual de las ventas",
+    subtitle = "Implica la diferencia entre el total de ventas del mes, con su antecesor") +
   xlab("Fechas") + ylab("Tasas") +
   geom_hline(
     yintercept = 0,
-    col = "#00afaf",
+    col = "#00a499",
     size = 1,
     linetype = "dotted"
   ) + scale_x_date(date_labels = "%Y/%b", date_breaks = "3 month") +
@@ -406,8 +410,8 @@ ggplot(Productos_Dataset, aes(group = Producto)) +
 #-------------EJERCICIO 1
 
 Ventas_TS <- ts(Sum_fecha$Ventas, # Tomamos la columna ventas del df
-                start = 2013,    # Le indicamos que inicia el 2013, ts() calcula automaticamente el final
-                frequency = 365) # Como los datos son diarios, le indicamos 365
+                start = 2013,     # Le indicamos que inicia el 2013, ts() calcula automaticamente el final
+                frequency = 365)  # Como los datos son diarios, le indicamos 365
 
 # Si son datos anuales, frequency = 1
 # Si son datos trimestrales, frequency = 4
@@ -422,7 +426,7 @@ ggseasonplot(Ventas_TS,
              ylab = "Ventas") +
   labs(title = "Evolución de las ventas diarias",
        subtitle = "Comparación año tras año del total de ventas acumuladas") +
-  scale_y_continuous(breaks = seq(0, 100000, 5000)) +
+  scale_y_continuous(breaks = seq(0, 100000, 5000), labels= separadores_funcion) +
   scale_x_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1),
     labels = c("Enero", "Marzo", "Junio", "Septiembre", "Diciembre")
@@ -434,7 +438,7 @@ ggseasonplot(Ventas_TS,
 ggAcf(Ventas_TS)
 
 Pacf(Ventas_TS)
-# La autocorrelación es una parte fundamental del analisis exploratorio de los datos
+# La autocorrelación es una parte fundamental del análisis exploratorio de los datos
 # permite identificar los patrones y revisar aleatoriedad en los datos.
 # Básicamente es la similitud entre las observaciones en función del desfase temporal
 # existente entre cada una de ellas.
@@ -451,6 +455,8 @@ tseries::adf.test(diff(Ventas_TS)) #p-value=0.01, es menor a 0.05, por ende la s
 
 # Descomposición del vector
 autoplot(decompose(Ventas_TS))
+
+# PRINCIPALES FUNCIONES Y ARGUMENTOS
 
 # Generamos un pronóstico
 autoplot(forecast(Ventas_TS),
@@ -883,8 +889,6 @@ is.forecast(Objeto)
 findfrequency(Ventas_TS)
 
 # -------------------------------------MISC-------------------------------------
-install.packages("ghibli")
-library(ghibli)
 
 Productos <- train %>% group_by(Tienda) %>%
   arrange(Tienda)
@@ -1000,9 +1004,92 @@ accuracy(sales_snaive)
 print(sample_submission)
 print(test)
 
+library(readr)
+test2 <- read_csv("C:/Users/phyrx/Downloads/test2.csv")
+View(test2)
+
+PRUEBA <- merge(test,test2, by="id")
+print(PRUEBA)
+
+PRUEBA_GRUPO <-  select(PRUEBA, sales, date) %>%
+  group_by(date) %>%
+  summarise(Ventas_diarias = sum(sales))
+
+
+PRUEBA_TS <- ts(PRUEBA_GRUPO$Ventas_diarias, 
+                start = 2018,   
+                frequency = 365)
+print(PRUEBA_TS)
+
+PRUEBA_ROUND <- PRUEBA %>% mutate(sales = round(sales,0))
+View(PRUEBA_ROUND)
+
+# Grafico de comparacion entre train y test
+autoplot(forecast_ejemplo) +
+  autolayer(PRUEBA_TS, series="Datos reales")  +
+  guides(colour = guide_legend(title = "Información"))
+
+accuracy(forecast_ejemplo)
+
+# Generamos la diferencia entre la media del forecast y los datos reales
+diferencia1 <- forecast_ejemplo$mean - modelos2_TS
+print(diferencia1)
+
+# Ploteamos el diferencial
+autoplot(diferencia1)
+
+resultado_accuracy <- accuracy(forecast_ejemplo, modelos2_TS)
+
+print(resultado_accuracy)
+ 
+#------------------TESTING MODEL-----------------------------
+
+
+# Ajustar un modelo a los datos de entrenamiento
+
+modelo1 <- auto.arima(Ventas_diarias_TS)
+modelo2 <-  select(PRUEBA, sales, date) %>%
+  group_by(date) %>%
+  summarise(Ventas = sum(sales))
+
+modelos2_TS <- ts(modelo2$Ventas, start=2018, frequency=365)
+
+# Generar pronósticos para los datos de prueba
+pronostico1 <- forecast(modelo1, h = length(modelo2_TS))
+
+# Comparar pronósticos con datos de prueba
+diferencia1 <- pronostico1$mean - test
+
+# Calcular medidas de precisión
+resultado_accuracy <- accuracy(pronostico1, test)
+
+
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
 gc()
 
 # Limpieza del environment
 # rm(list = ls())
+
+# Cargar la librería forecast
+library(forecast)
+
+# Generar pronósticos a partir de un modelo ajustado
+pronosticos <- forecast(modelo)
+
+# Ajustar automáticamente un modelo ARIMA
+modelo_arima <- auto.arima(datos)
+
+# Ajustar un modelo de suavizado exponencial
+modelo_ets <- ets(datos)
+
+# Descomponer una serie temporal en componentes
+componentes <- stl(datos)
+
+# Calcular medidas de precisión
+precision <- accuracy(pronosticos)
+
+# Visualizar datos y pronósticos
+plot(pronosticos)
+
+#----------------------------PRESENTACION---------------------------------------

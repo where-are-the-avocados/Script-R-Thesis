@@ -20,11 +20,11 @@ vgsales %>% filter(str_detect(Name, "A$"))
 
 str_remove(vgsales$Year, "N/A")
 
-Nombres <- select(vgsales, Name)
-
-Nombres %>% head() %>% str_length()
+Nombres <- select(vgsales, Name) 
+print(Nombres)
 
 Trunc <- str_trunc(Nombres$Name, 10, "left")
+print(Trunc)
 
 str_trim(Nombres$Name)
 
@@ -42,6 +42,7 @@ str_pad(Ejemplo, 10)
 
 Ejemplo <- c("La Manzana S.A","RUT: 71.229.587-4","Teléfono: +569 5445 7353")
 Ejemplo_2 <- "(71.229.587-4)"
+
 str_locate(Ejemplo,Ejemplo_2)
 
 str_detect(Ejemplo, Ejemplo_2)
@@ -62,8 +63,8 @@ str_to_upper(Ejemplo_2)
 cat(str_wrap(Ejemplo_2,width=10))
 Ejemplo %>% str_trunc(10) 
 str_pad(x, 10)
-str_length(Ejemplo)
+str_length(Ejemplo_2)
 str_sub(Ejemplo, 3)
-str_dup(Ejemplo, 3)
+str_dup(Ejemplo_2, 3)
 
 str_extract(Ejemplo,"\\d")
