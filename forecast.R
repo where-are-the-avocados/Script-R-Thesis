@@ -1,6 +1,6 @@
 # ------------------INSTALACIÓN DE PAQUETES DE INVESTIGACIÓN--------------------
 
- install.packages("tidyverse", # Paquete para hacer y manipular gráficos y datos
+install.packages("tidyverse", # Paquete para hacer y manipular gráficos y datos
                    "lubridate", # Permite trabajar con fechas
                    "forecast",  # Permite hacer pronósticos
                    "readxl",     # Funciones para cargar archivos
@@ -94,14 +94,14 @@ glimpse(summary(train))
 names(train)
 
 # Tendencia Central
-mean(train$sales)
-median(train$sales)
+mean(train$Ventas)
+median(train$Ventas)
 
 # Medidas de Variabilidad
-range(train$date)
-range(train$sales)
-var(train$sales)
-sd(train$sales)
+range(train$Fechas)
+range(train$Ventas)
+var(train$Ventas)
+sd(train$Ventas)
 
 #------------------------------SUMMARYTOOLS------------------------------------#
 
@@ -118,10 +118,10 @@ colSums(is.na(test))              # No tiene valores NA
 colSums(is.na(sample_submission)) # No tiene valores NA
 
 # Ajustamos las fechas de los datasets al formato de la ISO 8601
-test$date <- as.Date(test$date, format = "%Y/%m/%d")
+test$Fechas <- as.Date(test$Fechas, format = "%Y/%m/%d")
 print(test) # La columna date tiene formato <date>
 
-train$date <- as.Date(train$date, format = "%Y/%m/%d")
+train$Fechas <- as.Date(train$Fechas, format = "%Y/%m/%d")
 print(train) # La columna date tiene formato <date>
 
 # Extracción del año y el mes del año
@@ -461,8 +461,7 @@ autoplot(decompose(Ventas_TS))
 # Generamos un pronóstico
 autoplot(forecast(Ventas_TS),
          xlab = "Fechas",
-         ylab = "Cantidad",
-         main = "Pronóstico de las ventas diarias para los próximos dos periodos") +
+         ylab = "Cantidad") +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 20), labels = Fechas_funcion) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -652,6 +651,15 @@ autoplot(
 # Usaremos este item porque tiene un evento en particular que rompe con la estacionalidad
 # De este modo, mostraremos la comparación entre los distintos métodos de pronóstico.
 
+train <- read_csv(
+  "Dataset/train.csv",
+  locale = locale(decimal_mark = ",", grouping_mark = "."),
+  na = "NA",
+  comment = "#"
+)
+
+colnames(train) <- c("Fechas", "Tienda", "Producto", "Ventas")
+
 Tienda2 <- train %>% filter(Producto == 5) %>%
   group_by(Semanas = floor_date(Fechas, "week")) %>% # Son las ventas semanales
   summarise(Venta_Semanal = sum(Ventas))
@@ -781,7 +789,7 @@ autoplot(forecast(auto.arima(Tasas_Mes_TS)))
 Tasas_Mes2016 <- Meses[Meses$Mes >= "2016-01-01", ]
 
 # Revisamos el objeto nuevo
-print(Tasas_Mes_TS_2)
+print(Tasas_Mes2016)
 
 # Con dplyr agrupamos los datos de manera mensual, al igual que el objeto previamente
 # mostrado
@@ -1062,7 +1070,7 @@ diferencia1 <- pronostico1$mean - test
 
 # Calcular medidas de precisión
 resultado_accuracy <- accuracy(pronostico1, test)
-
+print(resultado_accuracy)
 
 #--------------------------------FINAL------------------------------------------
 # Liberación de memoria
